@@ -1,47 +1,83 @@
 import { useState, useRef, useEffect } from 'react'
 import { askQuestion } from '../api/client'
-import { Send, Loader2, MessageSquare, AlertTriangle, User, Bot } from 'lucide-react'
+import { Send, AlertTriangle, User, Bot, Sparkles } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 
 const EXAMPLE_QUESTIONS = [
-  'What changed in the bulk update feature and why?',
-  'What is the current approved scope of bulk update?',
+  'What changed in bulk update and why?',
+  'What is the current approved scope?',
   'Which requirements were affected by the security review?',
-  'Who decided to reduce the bulk update scope?',
+  'Who decided to reduce the scope?',
   'What open questions remain unresolved?',
 ]
 
-function Message({ msg }) {
-  const isUser = msg.role === 'user'
+function TypingIndicator({ dark }) {
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isUser ? 'bg-indigo-600' : 'bg-gray-200'}`}>
-        {isUser ? <User size={14} className="text-white" /> : <Bot size={14} className="text-gray-600" />}
+    <div className="flex gap-3 items-end">
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${dark ? 'bg-indigo-600/20 border border-indigo-500/30' : 'bg-indigo-50 border border-indigo-100'}`}>
+        <Bot size={14} className={dark ? 'text-indigo-400' : 'text-indigo-500'} />
       </div>
-      <div className={`max-w-[80%] ${isUser ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-        <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+      <div className={`rounded-2xl rounded-bl-sm px-4 py-3 ${dark ? 'glass-dark' : 'glass-light shadow-sm'}`}>
+        <div className="flex gap-1 items-center h-4">
+          <span className={`w-1.5 h-1.5 rounded-full dot-1 ${dark ? 'bg-gray-500' : 'bg-gray-400'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full dot-2 ${dark ? 'bg-gray-500' : 'bg-gray-400'}`} />
+          <span className={`w-1.5 h-1.5 rounded-full dot-3 ${dark ? 'bg-gray-500' : 'bg-gray-400'}`} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Message({ msg, dark }) {
+  const isUser = msg.role === 'user'
+
+  return (
+    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''} items-end`}>
+      {/* Avatar */}
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+        isUser
+          ? 'brand-gradient shadow-md shadow-indigo-500/20'
+          : dark ? 'bg-indigo-600/20 border border-indigo-500/30' : 'bg-indigo-50 border border-indigo-100'
+      }`}>
+        {isUser
+          ? <User size={13} className="text-white" />
+          : <Bot size={14} className={dark ? 'text-indigo-400' : 'text-indigo-500'} />
+        }
+      </div>
+
+      {/* Bubble */}
+      <div className={`flex flex-col gap-1.5 max-w-[78%] ${isUser ? 'items-end' : 'items-start'}`}>
+        <div className={`rounded-2xl px-4 py-3 text-[16px] leading-relaxed ${
           isUser
-            ? 'bg-indigo-600 text-white rounded-tr-sm'
-            : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'
+            ? 'brand-gradient text-white rounded-br-sm shadow-md shadow-indigo-500/15'
+            : dark
+              ? 'glass-dark text-gray-200 rounded-bl-sm'
+              : 'glass-light shadow-sm text-gray-700 rounded-bl-sm'
         }`}>
           {msg.content}
         </div>
-        {msg.sources && msg.sources.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1 px-1">
+
+        {msg.sources?.length > 0 && (
+          <div className="flex flex-wrap gap-1 px-1">
             {msg.sources.map((s, i) => (
-              <span key={i} className="text-xs bg-gray-100 text-gray-500 rounded px-2 py-0.5 font-mono">
+              <span key={i} className={`text-[16.5px] rounded-lg px-2 py-0.5 font-mono ${dark ? 'bg-white/[0.05] text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
                 {s}
               </span>
             ))}
           </div>
         )}
+
         {msg.hasContradiction && (
-          <div className="flex items-center gap-1 text-xs text-amber-600 px-1 mt-0.5">
+          <div className="flex items-center gap-1.5 text-[17px] text-amber-400 px-1">
             <AlertTriangle size={11} />
-            Contradictory evidence found — verify manually
+            Contradictory evidence — verify manually
           </div>
         )}
+
         {msg.uncertainty && (
-          <div className="text-xs text-gray-400 px-1 mt-0.5 italic">{msg.uncertainty}</div>
+          <div className={`text-[17px] px-1 italic ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
+            {msg.uncertainty}
+          </div>
         )}
       </div>
     </div>
@@ -49,10 +85,11 @@ function Message({ msg }) {
 }
 
 export default function AskContext() {
+  const { dark } = useTheme()
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hi! Ask me anything about this product initiative. I\'ll answer using only the ingested sources and tell you where each answer comes from.',
+      content: "Hi! Ask me anything about this product initiative. I'll answer using only the ingested sources and cite where each answer comes from.",
     },
   ])
   const [input, setInput] = useState('')
@@ -61,11 +98,11 @@ export default function AskContext() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, loading])
 
   async function send(question) {
     const q = question || input.trim()
-    if (!q) return
+    if (!q || loading) return
     setInput('')
     setMessages((prev) => [...prev, { role: 'user', content: q }])
     setLoading(true)
@@ -85,33 +122,35 @@ export default function AskContext() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        {
-          role: 'assistant',
-          content: `Error: ${err?.response?.data?.message || err.message || 'Something went wrong.'}`,
-        },
+        { role: 'assistant', content: `Error: ${err?.response?.data?.message || err.message || 'Something went wrong.'}` },
       ])
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-6rem)]">
-      <div className="mb-4 flex-shrink-0">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Ask Context</h2>
-        <p className="text-gray-500 text-sm">
-          Ask questions about the product initiative. Answers include source references and flag contradictions.
-        </p>
-      </div>
+  const msgArea = dark ? 'glass-dark' : 'bg-gray-50/60 border border-gray-200'
+  const exBtn   = dark
+    ? 'bg-white/[0.04] border border-white/[0.07] text-gray-400 hover:bg-white/[0.08] hover:text-gray-200 hover:border-indigo-500/30 disabled:opacity-40'
+    : 'bg-white border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 disabled:opacity-40'
+  const inp     = dark
+    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-indigo-500/60 focus:ring-indigo-500/20'
+    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
 
-      {/* Example questions */}
+  return (
+    <div className="max-w-3xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
+
+      {/* Example pills */}
       <div className="flex flex-wrap gap-2 mb-4 flex-shrink-0">
+        <div className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide mr-1 ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
+          <Sparkles size={10} /> Try asking
+        </div>
         {EXAMPLE_QUESTIONS.map((q) => (
           <button
             key={q}
             onClick={() => send(q)}
             disabled={loading}
-            className="text-xs bg-gray-50 text-gray-600 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 transition-colors disabled:opacity-40"
+            className={`text-[16px] rounded-full px-3 py-1.5 transition-all ${exBtn}`}
           >
             {q}
           </button>
@@ -119,26 +158,13 @@ export default function AskContext() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 bg-gray-50 rounded-xl p-4 border border-gray-200 min-h-0">
+      <div className={`flex-1 min-h-0 overflow-y-auto rounded-2xl p-5 space-y-5 ${msgArea}`}>
         {messages.map((msg, i) => (
-          <Message key={i} msg={msg} />
+          <Message key={i} msg={msg} dark={dark} />
         ))}
-        {loading && (
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-              <Bot size={14} className="text-gray-600" />
-            </div>
-            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-              <Loader2 size={16} className="animate-spin text-gray-400" />
-            </div>
-          </div>
-        )}
+        {loading && <TypingIndicator dark={dark} />}
         <div ref={bottomRef} />
       </div>
-
-
-
-
 
       {/* Input */}
       <form
@@ -149,16 +175,16 @@ export default function AskContext() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question about this product initiative…"
+          placeholder="Ask anything about this product initiative…"
           disabled={loading}
-          className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+          className={`flex-1 border rounded-2xl px-4 py-3 text-[16px] focus:outline-none focus:ring-2 disabled:opacity-60 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="bg-indigo-600 text-white px-4 py-3 rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+          className="brand-gradient text-white px-4 py-3 rounded-2xl hover:opacity-90 disabled:opacity-40 transition-all shadow-lg shadow-indigo-500/20"
         >
-          {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          <Send size={16} />
         </button>
       </form>
     </div>

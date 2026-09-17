@@ -19,7 +19,6 @@ export const askQuestion = (question) =>
 
 
 
-// kkfkk
 // Resume brief
 export const getResumeBrief = () => api.get('/resume-brief')
 

@@ -1,60 +1,79 @@
 import { useEffect, useState } from 'react'
 import { getEvents } from '../api/client'
-import { Loader2, Zap, ChevronDown, ChevronRight } from 'lucide-react'
+import { Loader2, Zap, ChevronDown, ChevronRight, TrendingUp, Activity, RotateCcw } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 
 function groupByAffected(events) {
   const map = {}
   events.forEach((e) => {
-    if (e.affectedItems && e.affectedItems.length > 0) {
-      e.affectedItems.forEach((item) => {
-        if (!map[item]) map[item] = []
-        map[item].push(e)
-      })
-    }
+    ;(e.affectedItems || []).forEach((item) => {
+      if (!map[item]) map[item] = []
+      map[item].push(e)
+    })
   })
   return map
 }
 
-const STATUS_COLOR = {
-  CURRENT: 'bg-green-100 text-green-700',
-  SUPERSEDED: 'bg-gray-100 text-gray-500 line-through',
-  UNRESOLVED: 'bg-orange-100 text-orange-700',
+function StatCard({ label, value, icon: Icon, color, dark }) {
+  const card = dark ? 'glass-dark' : 'glass-light shadow-sm'
+  return (
+    <div className={`rounded-2xl p-4 ${card} card-hover`}>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className={`text-[28px] font-bold leading-none mb-1 ${color}`}>{value}</div>
+          <div className={`text-[17px] ${dark ? 'text-gray-500' : 'text-gray-400'}`}>{label}</div>
+        </div>
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color.replace('text-', 'bg-').replace('400', '400/15').replace('500', '500/15').replace('600', '600/10')}`}>
+          <Icon size={16} className={color} />
+        </div>
+      </div>
+    </div>
+  )
 }
 
-function ImpactGroup({ item, events, open, onToggle }) {
+function ImpactGroup({ item, events, open, onToggle, dark }) {
+  const card    = dark ? 'glass-dark' : 'glass-light shadow-sm'
+  const hdr     = dark ? 'hover:bg-white/[0.03]' : 'hover:bg-gray-50/80'
+  const divider = dark ? 'border-white/[0.05]' : 'border-gray-100'
+  const summary = dark ? 'text-gray-200' : 'text-gray-700'
+  const muted   = dark ? 'text-gray-500' : 'text-gray-400'
+  const badge   = dark ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+
+  const STATUS = dark
+    ? { CURRENT: 'bg-emerald-500/15 text-emerald-400', SUPERSEDED: 'bg-gray-500/15 text-gray-500 line-through', UNRESOLVED: 'bg-orange-500/15 text-orange-400' }
+    : { CURRENT: 'bg-green-100 text-green-700', SUPERSEDED: 'bg-gray-100 text-gray-400 line-through', UNRESOLVED: 'bg-orange-100 text-orange-700' }
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div className={`border rounded-2xl overflow-hidden ${card} ${dark ? 'border-white/[0.07]' : 'border-gray-200'}`}>
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+        className={`w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors ${hdr}`}
       >
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded px-2 py-0.5">
-            {item}
-          </span>
-          <span className="text-xs text-gray-500">{events.length} event{events.length !== 1 ? 's' : ''}</span>
+          <span className={`text-[16.5px] font-semibold px-2.5 py-0.5 rounded-lg border font-mono ${badge}`}>{item}</span>
+          <span className={`text-[17px] ${muted}`}>{events.length} event{events.length !== 1 ? 's' : ''}</span>
         </div>
-        {open ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+        {open
+          ? <ChevronDown size={15} className={muted} />
+          : <ChevronRight size={15} className={muted} />}
       </button>
 
       {open && (
-        <div className="border-t border-gray-100 divide-y divide-gray-50">
+        <div className={`border-t divide-y ${divider}`}>
           {events.map((e) => (
-            <div key={e.id} className="px-5 py-3">
+            <div key={e.id} className="px-5 py-3.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[e.status] || 'bg-gray-100 text-gray-700'}`}>
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className={`text-[16.5px] font-semibold px-2 py-0.5 rounded-full ${STATUS[e.status] || (dark ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')}`}>
                       {e.status}
                     </span>
-                    <span className="text-xs text-gray-500">{e.eventType.replace('_', ' ')}</span>
+                    <span className={`text-[17px] ${muted}`}>{e.eventType.replace('_', ' ')}</span>
                   </div>
-                  <p className="text-sm text-gray-700 leading-relaxed">{e.summary}</p>
-                  {e.decidedBy && (
-                    <p className="text-xs text-gray-400 mt-1">by {e.decidedBy}</p>
-                  )}
+                  <p className={`text-[16px] leading-relaxed ${summary}`}>{e.summary}</p>
+                  {e.decidedBy && <p className={`text-[17px] mt-1 ${muted}`}>by {e.decidedBy}</p>}
                 </div>
-                <span className="text-xs text-gray-400 whitespace-nowrap">{e.eventDate}</span>
+                <span className={`text-[17px] whitespace-nowrap ${muted}`}>{e.eventDate}</span>
               </div>
             </div>
           ))}
@@ -65,6 +84,7 @@ function ImpactGroup({ item, events, open, onToggle }) {
 }
 
 export default function ChangeImpact() {
+  const { dark } = useTheme()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -74,9 +94,9 @@ export default function ChangeImpact() {
   useEffect(() => {
     getEvents()
       .then((r) => {
-        setEvents(r.data || [])
-        // Open all by default
-        const groups = groupByAffected(r.data || {})
+        const data = r.data || []
+        setEvents(data)
+        const groups = groupByAffected(data)
         const initial = {}
         Object.keys(groups).forEach((k) => { initial[k] = true })
         setOpenItems(initial)
@@ -85,66 +105,52 @@ export default function ChangeImpact() {
       .finally(() => setLoading(false))
   }, [])
 
-  const grouped = groupByAffected(events)
+  const grouped  = groupByAffected(events)
   const filtered = Object.entries(grouped).filter(([item]) =>
     item.toLowerCase().includes(search.toLowerCase())
   )
 
-  const affectedCount = Object.keys(grouped).length
-  const supersededCount = events.filter((e) => e.status === 'SUPERSEDED').length
+  const inp = dark
+    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-indigo-500/60 focus:ring-indigo-500/20'
+    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Change Impact</h2>
-        <p className="text-gray-500 text-sm">
-          See which requirements, tickets, tests and designs are affected by each decision or change.
-        </p>
-      </div>
 
       {!loading && !error && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm text-center">
-            <div className="text-2xl font-bold text-indigo-600">{affectedCount}</div>
-            <div className="text-xs text-gray-500 mt-1">Affected items</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm text-center">
-            <div className="text-2xl font-bold text-green-600">{events.filter((e) => e.status === 'CURRENT').length}</div>
-            <div className="text-xs text-gray-500 mt-1">Current events</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm text-center">
-            <div className="text-2xl font-bold text-gray-500">{supersededCount}</div>
-            <div className="text-xs text-gray-500 mt-1">Superseded</div>
-          </div>
+        <div className="grid grid-cols-3 gap-4 mb-7">
+          <StatCard label="Affected Items"  value={Object.keys(grouped).length} icon={Activity}   color={dark ? 'text-indigo-400' : 'text-indigo-600'} dark={dark} />
+          <StatCard label="Current Events"  value={events.filter(e => e.status === 'CURRENT').length} icon={TrendingUp} color={dark ? 'text-emerald-400' : 'text-emerald-600'} dark={dark} />
+          <StatCard label="Superseded"      value={events.filter(e => e.status === 'SUPERSEDED').length} icon={RotateCcw}  color={dark ? 'text-gray-400' : 'text-gray-500'} dark={dark} />
         </div>
       )}
 
-      <div className="mb-4">
+      <div className="mb-5">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by ticket, requirement, test ID…"
-          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className={`w-full border rounded-xl px-4 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
         />
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center py-16 text-gray-400">
-          <Loader2 size={24} className="animate-spin mr-2" /> Loading impact map…
+        <div className={`flex items-center justify-center py-20 gap-2 ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
+          <Loader2 size={20} className="animate-spin" /> Loading impact map…
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl px-4 py-3 text-[16px]">
           Failed to load: {error}
         </div>
       )}
 
       {!loading && !error && filtered.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <Zap size={32} className="mx-auto mb-3 opacity-30" />
-          <p className="text-sm">
+        <div className={`text-center py-20 ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
+          <Zap size={36} className="mx-auto mb-3 opacity-30" />
+          <p className="text-[16px]">
             {Object.keys(grouped).length === 0
               ? 'No affected items yet. Ingest sources to build the impact map.'
               : 'No items match your search.'}
@@ -155,11 +161,10 @@ export default function ChangeImpact() {
       <div className="space-y-3">
         {filtered.map(([item, evs]) => (
           <ImpactGroup
-            key={item}
-            item={item}
-            events={evs}
+            key={item} item={item} events={evs}
             open={!!openItems[item]}
             onToggle={() => setOpenItems((prev) => ({ ...prev, [item]: !prev[item] }))}
+            dark={dark}
           />
         ))}
       </div>

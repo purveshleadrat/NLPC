@@ -1,20 +1,23 @@
 import { useState } from 'react'
-import { Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { Upload, CheckCircle, AlertCircle, Loader2, Zap, Clipboard } from 'lucide-react'
 import { ingestSource } from '../api/client'
+import { useTheme } from '../context/ThemeContext'
 
 const SOURCE_TYPES = [
-  { value: 'meeting_note', label: 'Meeting Note' },
+  { value: 'meeting_note',    label: 'Meeting Note' },
   { value: 'requirement_doc', label: 'Requirement Doc' },
-  { value: 'ticket', label: 'Ticket' },
-  { value: 'design_ref', label: 'Design Reference' },
-  { value: 'release_note', label: 'Release Note' },
-  { value: 'transcript', label: 'Transcript' },
-  { value: 'commit', label: 'Commit Message' },
+  { value: 'ticket',          label: 'Ticket' },
+  { value: 'design_ref',      label: 'Design Reference' },
+  { value: 'release_note',    label: 'Release Note' },
+  { value: 'transcript',      label: 'Transcript' },
+  { value: 'commit',          label: 'Commit Message' },
 ]
 
 const SAMPLES = [
   {
-    label: 'Meeting note — Bulk Update scope reduction',
+    label: 'Meeting Note',
+    sub: 'Bulk Update scope reduction',
+    icon: '🗣️',
     type: 'meeting_note',
     title: 'Security Review: Bulk Update Scope Reduction — 2025-08-12',
     docDate: '2025-08-12',
@@ -34,7 +37,9 @@ Action items:
 Open question: Will the deals bulk-update be revisited in Q4? No decision yet.`,
   },
   {
-    label: 'Requirement doc — Bulk Contact Update v2',
+    label: 'Requirement Doc',
+    sub: 'Bulk Contact Update v2',
+    icon: '📋',
     type: 'requirement_doc',
     title: 'REQ-204: Bulk Contact Update (v2, post security review)',
     docDate: '2025-08-14',
@@ -56,7 +61,9 @@ AC-4: Undo is available for 60 seconds after commit.
 Dependencies: NPLC-88 (audit trail), NPLC-72 (activity feed).`,
   },
   {
-    label: 'Ticket — NPLC-88 Audit trail',
+    label: 'Ticket',
+    sub: 'NPLC-88 Audit trail',
+    icon: '🎫',
     type: 'ticket',
     title: 'NPLC-88: Add per-field audit trail for bulk contact update',
     docDate: '2025-08-13',
@@ -70,8 +77,6 @@ Priority: HIGH
 Description:
 Implement per-field change logging for the bulk contact update feature. Each field change must record: userId, contactId, fieldName, oldValue, newValue, timestamp.
 
-This ticket was created as a direct outcome of the 2025-08-12 security review that reduced the bulk-update scope to contacts only (see MEET-2025-0812 and REQ-204 v2).
-
 Sub-tasks:
 - [ ] Schema migration for audit_log table
 - [ ] Hook into bulk update service
@@ -83,35 +88,23 @@ Blocked by: NPLC-72 (Activity Feed API)`,
 ]
 
 export default function IngestSources() {
+  const { dark } = useTheme()
   const [form, setForm] = useState({
-    type: 'meeting_note',
-    title: '',
-    rawText: '',
-    docDate: '',
-    author: '',
-    externalRef: '',
+    type: 'meeting_note', title: '', rawText: '', docDate: '', author: '', externalRef: '',
   })
-  const [status, setStatus] = useState(null) // null | 'loading' | 'ok' | 'error'
+  const [status, setStatus] = useState(null)
   const [message, setMessage] = useState('')
 
   function loadSample(sample) {
-    setForm({
-      type: sample.type,
-      title: sample.title,
-      rawText: sample.rawText,
-      docDate: sample.docDate,
-      author: sample.author,
-      externalRef: sample.externalRef,
-    })
+    setForm({ type: sample.type, title: sample.title, rawText: sample.rawText,
+      docDate: sample.docDate, author: sample.author, externalRef: sample.externalRef })
     setStatus(null)
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.title || !form.rawText || !form.docDate) {
-      setStatus('error')
-      setMessage('Title, date and content are required.')
-      return
+      setStatus('error'); setMessage('Title, date and content are required.'); return
     }
     setStatus('loading')
     try {
@@ -125,123 +118,137 @@ export default function IngestSources() {
     }
   }
 
+  // Theme tokens
+  const card   = dark ? 'glass-dark' : 'glass-light shadow-sm'
+  const label  = dark ? 'text-gray-400' : 'text-gray-500'
+  const inp    = dark
+    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-indigo-500/60 focus:ring-indigo-500/20'
+    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
+  const sampleCard = dark
+    ? 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-indigo-500/30'
+    : 'bg-gray-50 border-gray-200 hover:bg-indigo-50 hover:border-indigo-200'
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Ingest Sources</h2>
-        <p className="text-gray-500 text-sm">
-          Add meeting notes, requirements, tickets, design references or release notes. The system extracts decisions, changes and open questions automatically.
-        </p>
+    <div className="max-w-4xl mx-auto">
+
+      {/* Sample cards */}
+      <div className="grid grid-cols-3 gap-3 mb-7">
+        {SAMPLES.map((s) => (
+          <button
+            key={s.externalRef}
+            onClick={() => loadSample(s)}
+            className={`text-left border rounded-2xl p-4 transition-all duration-150 card-hover group ${sampleCard}`}
+          >
+            <div className="text-2xl mb-2">{s.icon}</div>
+            <div className={`text-[17px] font-semibold mb-0.5 ${dark ? 'text-gray-200' : 'text-gray-700'}`}>{s.label}</div>
+            <div className={`text-[17px] ${dark ? 'text-gray-500' : 'text-gray-400'}`}>{s.sub}</div>
+            <div className={`mt-3 text-[16.5px] font-medium flex items-center gap-1 ${dark ? 'text-indigo-400' : 'text-indigo-500'}`}>
+              <Clipboard size={10} /> Load sample
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* Sample loaders */}
-      <div className="mb-6">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Load a sample</p>
-        <div className="flex flex-wrap gap-2">
-          {SAMPLES.map((s) => (
-            <button
-              key={s.externalRef}
-              onClick={() => loadSample(s)}
-              className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md px-3 py-1.5 hover:bg-indigo-100 transition-colors"
-            >
-              {s.label}
-            </button>
-          ))}
+      {/* Form */}
+      <div className={`rounded-2xl p-6 ${card}`}>
+        <div className="flex items-center gap-2 mb-5">
+          <div className="brand-gradient w-7 h-7 rounded-lg flex items-center justify-center">
+            <Upload size={13} className="text-white" />
+          </div>
+          <h3 className={`text-[17px] font-semibold ${dark ? 'text-white' : 'text-gray-800'}`}>New Source</h3>
         </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-[17px] font-semibold uppercase tracking-wide mb-1.5 ${label}`}>Type *</label>
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                className={`w-full border rounded-xl px-3 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
+              >
+                {SOURCE_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={`block text-[17px] font-semibold uppercase tracking-wide mb-1.5 ${label}`}>Date *</label>
+              <input
+                type="date"
+                value={form.docDate}
+                onChange={(e) => setForm({ ...form, docDate: e.target.value })}
+                className={`w-full border rounded-xl px-3 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={`block text-[17px] font-semibold uppercase tracking-wide mb-1.5 ${label}`}>Title *</label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. Security Review: Bulk Update Scope Reduction"
+              className={`w-full border rounded-xl px-3 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-[17px] font-semibold uppercase tracking-wide mb-1.5 ${label}`}>Author</label>
+              <input
+                type="text"
+                value={form.author}
+                onChange={(e) => setForm({ ...form, author: e.target.value })}
+                placeholder="e.g. Priya S."
+                className={`w-full border rounded-xl px-3 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
+              />
+            </div>
+            <div>
+              <label className={`block text-[17px] font-semibold uppercase tracking-wide mb-1.5 ${label}`}>External Ref</label>
+              <input
+                type="text"
+                value={form.externalRef}
+                onChange={(e) => setForm({ ...form, externalRef: e.target.value })}
+                placeholder="e.g. NPLC-88, REQ-204"
+                className={`w-full border rounded-xl px-3 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={`block text-[17px] font-semibold uppercase tracking-wide mb-1.5 ${label}`}>Content *</label>
+            <textarea
+              rows={9}
+              value={form.rawText}
+              onChange={(e) => setForm({ ...form, rawText: e.target.value })}
+              placeholder="Paste the full text of the document here…"
+              className={`w-full border rounded-xl px-3 py-2.5 text-[16px] font-mono focus:outline-none focus:ring-2 resize-y transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
+            />
+          </div>
+
+          {status === 'ok' && (
+            <div className="flex items-center gap-2.5 text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-xl px-4 py-3 text-[17px]">
+              <CheckCircle size={15} /> {message}
+            </div>
+          )}
+          {status === 'error' && (
+            <div className="flex items-center gap-2.5 text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3 text-[17px]">
+              <AlertCircle size={15} /> {message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className="flex items-center gap-2 brand-gradient text-white px-5 py-2.5 rounded-xl text-[16px] font-semibold hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-indigo-500/20"
+          >
+            {status === 'loading' ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
+            {status === 'loading' ? 'Ingesting…' : 'Ingest Source'}
+          </button>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Source type *</label>
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {SOURCE_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Document date *</label>
-            <input
-              type="date"
-              value={form.docDate}
-              onChange={(e) => setForm({ ...form, docDate: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Title *</label>
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="e.g. Security Review: Bulk Update Scope Reduction"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Author / Owner</label>
-            <input
-              type="text"
-              value={form.author}
-              onChange={(e) => setForm({ ...form, author: e.target.value })}
-              placeholder="e.g. Priya S."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">External ref</label>
-            <input
-              type="text"
-              value={form.externalRef}
-              onChange={(e) => setForm({ ...form, externalRef: e.target.value })}
-              placeholder="e.g. NPLC-88, REQ-204"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Content *</label>
-          <textarea
-            rows={10}
-            value={form.rawText}
-            onChange={(e) => setForm({ ...form, rawText: e.target.value })}
-            placeholder="Paste the full text of the document here…"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
-          />
-        </div>
-
-        {status === 'ok' && (
-          <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm">
-            <CheckCircle size={16} />
-            {message}
-          </div>
-        )}
-        {status === 'error' && (
-          <div className="flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm">
-            <AlertCircle size={16} />
-            {message}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60 transition-colors"
-        >
-          {status === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-          {status === 'loading' ? 'Ingesting…' : 'Ingest Source'}
-        </button>
-      </form>
     </div>
   )
 }
