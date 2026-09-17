@@ -5,7 +5,7 @@ initiative. Spring Boot + Maven.
 
 ## Setup
 
-Requires Java 17+ and Maven.
+Requires Java 17+ and Maven (or Docker, see below). Database is Postgres, hosted on Supabase.
 
 ```bash
 git clone <this-repo-url>
@@ -39,6 +39,25 @@ mvn spring-boot:run
 ```
 
 Server starts on `http://localhost:4000`.
+
+### Running with Docker instead
+
+```bash
+make infra-up      # builds the image and starts the container (reads ./.env)
+make infra-logs    # tail logs
+make infra-down    # stop and remove the container
+make infra-restart # down + up
+```
+
+### Database (Supabase)
+
+This app connects to a Postgres database hosted on [Supabase](https://supabase.com) — no local
+DB needed. Tables are created/updated automatically on startup via Hibernate
+(`spring.jpa.hibernate.ddl-auto=update`), so there are no manual migrations to run.
+
+To get your own connection string: Supabase dashboard → **Connect** → **Direct connection** tab
+→ **Session pooler** (IPv4-compatible, required for most hosts/networks) → copy the host/port/user,
+and use the DB password you set when creating the project.
 
 ## Endpoints (current)
 
@@ -76,6 +95,15 @@ src/main/java/com/hackathon/productmemory/
 Database is Supabase (hosted Postgres) — see `SUPABASE_DB_URL`/`SUPABASE_DB_USERNAME`/
 `SUPABASE_DB_PASSWORD` above. `spring.jpa.hibernate.ddl-auto=update` creates/updates tables
 (including `ticket_branch_links`) automatically on startup.
+## Deployment
+
+Deployed as a Docker container (see `Dockerfile`) on [Render](https://render.com):
+
+- Root Directory: `nplc/Backend`
+- Language: `Docker`
+- Env vars: same as local setup above (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`,
+  `SPRING_DATASOURCE_PASSWORD`, `ANTHROPIC_API_KEY`, `JIRA_SITE_URL`, `JIRA_EMAIL`,
+  `JIRA_API_TOKEN`) added in the Render dashboard, not committed
 
 ## Rules compliance (per Hackathon 2K26 rules doc)
 
