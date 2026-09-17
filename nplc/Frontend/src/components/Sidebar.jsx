@@ -1,16 +1,22 @@
 import { NavLink } from 'react-router-dom'
 import {
-  Upload, GitCommitHorizontal, Zap,
-  MessageSquare, FileText, Sun, Moon, Brain, Sparkles,
+  Upload,
+  GitCommitHorizontal,
+  Zap,
+  MessageSquare,
+  FileText,
+  Ticket,
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
 const links = [
-  { to: '/',         label: 'Ingest Sources', icon: Upload              },
-  { to: '/timeline', label: 'Timeline',        icon: GitCommitHorizontal },
-  { to: '/impact',   label: 'Impact',           icon: Zap                 },
-  { to: '/ask',      label: 'Ask AI',           icon: MessageSquare       },
-  { to: '/brief',    label: 'Brief',            icon: FileText            },
+  { to: '/', label: 'Ingest Sources', icon: Upload },
+  { to: '/timeline', label: 'Decision Timeline', icon: GitCommitHorizontal },
+  { to: '/impact', label: 'Change Impact', icon: Zap },
+  { to: '/ask', label: 'Ask Context', icon: MessageSquare },
+  { to: '/brief', label: 'Resume Brief', icon: FileText },
+  { to: '/tickets', label: 'Tickets', icon: Ticket },
+  { to: '/jira', label: 'Jira Tickets', icon: Ticket },
 ]
 
 
