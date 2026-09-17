@@ -1,13 +1,16 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import IngestSources from './pages/IngestSources'
 import DecisionTimeline from './pages/DecisionTimeline'
 import ChangeImpact from './pages/ChangeImpact'
 import AskContext from './pages/AskContext'
 import ResumeBrief from './pages/ResumeBrief'
-import Tickets from './pages/Tickets'
 import JiraTickets from './pages/JiraTickets'
 import JiraTicketDetail from './pages/JiraTicketDetail'
+import { ThemeProvider, useTheme } from './context/ThemeContext'
+
+function AppContent() {
+  const { dark } = useTheme()
 
   return (
     <div
@@ -22,7 +25,6 @@ import JiraTicketDetail from './pages/JiraTicketDetail'
           <Route path="/impact" element={<ChangeImpact />} />
           <Route path="/ask" element={<AskContext />} />
           <Route path="/brief" element={<ResumeBrief />} />
-          <Route path="/tickets" element={<Tickets />} />
           <Route path="/jira" element={<JiraTickets />} />
           <Route path="/jira/:key" element={<JiraTicketDetail />} />
         </Routes>
