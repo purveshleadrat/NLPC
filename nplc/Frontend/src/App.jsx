@@ -5,6 +5,8 @@ import DecisionTimeline from './pages/DecisionTimeline'
 import ChangeImpact from './pages/ChangeImpact'
 import AskContext from './pages/AskContext'
 import ResumeBrief from './pages/ResumeBrief'
+import JiraTickets from './pages/JiraTickets'
+import JiraTicketDetail from './pages/JiraTicketDetail'
 
 export default function App() {
   return (
@@ -17,6 +19,8 @@ export default function App() {
           <Route path="/impact" element={<ChangeImpact />} />
           <Route path="/ask" element={<AskContext />} />
           <Route path="/brief" element={<ResumeBrief />} />
+          <Route path="/jira" element={<JiraTickets />} />
+          <Route path="/jira/:key" element={<JiraTicketDetail />} />
         </Routes>
       </main>
     </div>
