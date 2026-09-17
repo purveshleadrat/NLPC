@@ -2,6 +2,7 @@ package com.hackathon.productmemory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.TenantId;
 import java.time.Instant;
 
 // Table name is quoted because CONSTRAINTS is a SQL keyword - unquoted it can
@@ -12,6 +13,11 @@ import java.time.Instant;
 public class Constraint {
     @Id
     private String id;
+
+    // Stamped on insert and appended to every query by Hibernate - see TenantIdentifierResolver.
+    @TenantId
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private String tenantId;
 
     @Column(nullable = false)
     private String initiativeId;
