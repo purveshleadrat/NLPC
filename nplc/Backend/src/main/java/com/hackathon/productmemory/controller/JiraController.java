@@ -2,7 +2,9 @@ package com.hackathon.productmemory.controller;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.Base64;
@@ -54,5 +56,22 @@ public class JiraController {
                 .header(HttpHeaders.AUTHORIZATION, basicAuthHeader)
                 .retrieve()
                 .body(Object.class);
+    }
+
+    // GET /jira/tickets/{key} - exact-key lookup only. Jira looks issues up by their exact key,
+    // so a request for "CJ-01" can never return "CJ-011".
+    // -> https://{site}/rest/api/3/issue/{key}
+    @GetMapping("/tickets/{key}")
+    public ResponseEntity<Object> getTicket(@PathVariable String key) {
+        try {
+            Object body = restClient.get()
+                    .uri("/rest/api/3/issue/{key}", key)
+                    .header(HttpHeaders.AUTHORIZATION, basicAuthHeader)
+                    .retrieve()
+                    .body(Object.class);
+            return ResponseEntity.ok(body);
+        } catch (HttpClientErrorException.NotFound e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

@@ -1,9 +1,17 @@
+# Secrets - never commit
 .env
 .env.*
 !.env.example
-target/
-data/
-node_modules/
-dist/
+
+# Backend (Maven)
+nplc/Backend/target/
+nplc/Backend/data/
+
+# Frontend (Vite/Node)
+nplc/Frontend/node_modules/
+nplc/Frontend/dist/
+
+# IDE
+.vscode/
 .idea/
 *.iml
