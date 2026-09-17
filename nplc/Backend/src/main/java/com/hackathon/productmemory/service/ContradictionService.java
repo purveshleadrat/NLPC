@@ -30,11 +30,17 @@ public class ContradictionService {
     }
 
     public List<Contradiction> findByInitiative(String initiativeId) {
+        if (initiativeId == null || initiativeId.isBlank()) {
+            return contradictionRepository.findAll();
+        }
         return contradictionRepository.findByInitiativeId(
                 initiativeService.requireInitiative(initiativeId));
     }
 
     public List<Contradiction> findUnresolvedByInitiative(String initiativeId) {
+        if (initiativeId == null || initiativeId.isBlank()) {
+            return contradictionRepository.findAll().stream().filter(c -> !c.isResolved()).toList();
+        }
         return contradictionRepository.findByInitiativeIdAndResolvedFalse(
                 initiativeService.requireInitiative(initiativeId));
     }

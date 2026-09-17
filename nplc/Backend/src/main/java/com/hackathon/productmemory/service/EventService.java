@@ -29,16 +29,25 @@ public class EventService {
     }
 
     public List<Event> findByInitiative(String initiativeId) {
+        if (initiativeId == null || initiativeId.isBlank()) {
+            return eventRepository.findAll();
+        }
         return eventRepository.findByInitiativeIdOrderByEventDateAsc(
                 initiativeService.requireInitiative(initiativeId));
     }
 
     public List<Event> findByInitiativeAndStatus(String initiativeId, String status) {
+        if (initiativeId == null || initiativeId.isBlank()) {
+            return eventRepository.findAll().stream().filter(e -> status.equalsIgnoreCase(e.getStatus())).toList();
+        }
         return eventRepository.findByInitiativeIdAndStatusOrderByEventDateAsc(
                 initiativeService.requireInitiative(initiativeId), status);
     }
 
     public List<Event> findByInitiativeAndType(String initiativeId, String eventType) {
+        if (initiativeId == null || initiativeId.isBlank()) {
+            return eventRepository.findAll().stream().filter(e -> eventType.equalsIgnoreCase(e.getEventType())).toList();
+        }
         return eventRepository.findByInitiativeIdAndEventType(
                 initiativeService.requireInitiative(initiativeId), eventType);
     }

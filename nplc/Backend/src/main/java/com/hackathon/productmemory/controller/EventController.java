@@ -20,13 +20,13 @@ public class EventController {
     // POST /events?initiativeId=...
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Event create(@RequestParam String initiativeId, @RequestBody Event event) {
-        return eventService.create(initiativeId, event);
+    public Event create(@RequestParam(required = false) String initiativeId, @RequestBody Event event) {
+        return eventService.create(initiativeId != null ? initiativeId : "", event);
     }
 
     // GET /events?initiativeId=...&status=CURRENT&eventType=DECISION
     @GetMapping
-    public List<Event> list(@RequestParam String initiativeId,
+    public List<Event> list(@RequestParam(required = false) String initiativeId,
                             @RequestParam(required = false) String status,
                             @RequestParam(required = false) String eventType) {
         if (status != null) {

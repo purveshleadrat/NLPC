@@ -20,14 +20,14 @@ public class ContradictionController {
     // POST /contradictions?initiativeId=...
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Contradiction create(@RequestParam String initiativeId,
+    public Contradiction create(@RequestParam(required = false) String initiativeId,
                                 @RequestBody Contradiction contradiction) {
-        return contradictionService.create(initiativeId, contradiction);
+        return contradictionService.create(initiativeId != null ? initiativeId : "", contradiction);
     }
 
     // GET /contradictions?initiativeId=...&unresolved=true
     @GetMapping
-    public List<Contradiction> list(@RequestParam String initiativeId,
+    public List<Contradiction> list(@RequestParam(required = false) String initiativeId,
                                     @RequestParam(defaultValue = "false") boolean unresolved) {
         return unresolved
                 ? contradictionService.findUnresolvedByInitiative(initiativeId)

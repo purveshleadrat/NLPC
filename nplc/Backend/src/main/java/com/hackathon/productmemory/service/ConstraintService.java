@@ -30,11 +30,17 @@ public class ConstraintService {
     }
 
     public List<Constraint> findByInitiative(String initiativeId) {
+        if (initiativeId == null || initiativeId.isBlank()) {
+            return constraintRepository.findAll();
+        }
         return constraintRepository.findByInitiativeId(
                 initiativeService.requireInitiative(initiativeId));
     }
 
     public List<Constraint> findByInitiativeAndStatus(String initiativeId, String status) {
+        if (initiativeId == null || initiativeId.isBlank()) {
+            return constraintRepository.findAll().stream().filter(c -> status.equalsIgnoreCase(c.getStatus())).toList();
+        }
         return constraintRepository.findByInitiativeIdAndStatus(
                 initiativeService.requireInitiative(initiativeId), status);
     }

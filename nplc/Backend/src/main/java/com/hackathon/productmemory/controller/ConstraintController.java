@@ -20,13 +20,13 @@ public class ConstraintController {
     // POST /constraints?initiativeId=...
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Constraint create(@RequestParam String initiativeId, @RequestBody Constraint constraint) {
-        return constraintService.create(initiativeId, constraint);
+    public Constraint create(@RequestParam(required = false) String initiativeId, @RequestBody Constraint constraint) {
+        return constraintService.create(initiativeId != null ? initiativeId : "", constraint);
     }
 
     // GET /constraints?initiativeId=...&status=ACTIVE
     @GetMapping
-    public List<Constraint> list(@RequestParam String initiativeId,
+    public List<Constraint> list(@RequestParam(required = false) String initiativeId,
                                  @RequestParam(required = false) String status) {
         return status == null
                 ? constraintService.findByInitiative(initiativeId)
