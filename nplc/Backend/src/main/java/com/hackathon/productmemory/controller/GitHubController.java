@@ -44,14 +44,14 @@ public class GitHubController {
                 .body(Object.class);
     }
 
-    // GET /github/branches/{name} - exact-name lookup only. GitHub's per-branch endpoint looks
-    // branches up by their exact name, so a request for "CJ-01" can never return "CJ-011".
+    // GET /github/branches/{*name} - supports branch names with slashes, e.g. feature/CJ-01
     // -> https://api.github.com/repos/{owner}/{repo}/branches/{name}
-    @GetMapping("/branches/{name}")
+    @GetMapping("/branches/{*name}")
     public ResponseEntity<Object> getBranch(@PathVariable String name) {
+        String cleanName = (name != null && name.startsWith("/")) ? name.substring(1) : name;
         try {
             Object body = restClient.get()
-                    .uri("/repos/{owner}/{repo}/branches/{name}", owner, repo, name)
+                    .uri("/repos/{owner}/{repo}/branches/{name}", owner, repo, cleanName)
                     .retrieve()
                     .body(Object.class);
             return ResponseEntity.ok(body);

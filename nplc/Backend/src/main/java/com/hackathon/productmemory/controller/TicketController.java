@@ -36,12 +36,24 @@ public class TicketController {
         this.repoFullName = owner + "/" + repo;
     }
 
-    // GET /tickets/{key} - exact-key lookup across both systems, e.g. "CJ-01" never resolves
-    // to "CJ-011" in either half of the pairing.
+    // GET /tickets/{key} - exact-key lookup across both systems, with fallback to feature/, bugfix/, fix/ prefixes
     @GetMapping("/{key}")
     public ResponseEntity<Map<String, Object>> lookup(@PathVariable String key) {
         ResponseEntity<Object> jiraResponse = jiraController.getTicket(key);
+
+        String matchedBranchName = key;
         ResponseEntity<Object> branchResponse = gitHubController.getBranch(key);
+        if (!branchResponse.getStatusCode().is2xxSuccessful()) {
+            String[] prefixes = {"feature/", "bugfix/", "fix/"};
+            for (String prefix : prefixes) {
+                ResponseEntity<Object> candidate = gitHubController.getBranch(prefix + key);
+                if (candidate.getStatusCode().is2xxSuccessful()) {
+                    branchResponse = candidate;
+                    matchedBranchName = prefix + key;
+                    break;
+                }
+            }
+        }
 
         boolean jiraFound = jiraResponse.getStatusCode().is2xxSuccessful();
         boolean branchFound = branchResponse.getStatusCode().is2xxSuccessful();
@@ -59,7 +71,7 @@ public class TicketController {
         }
         link.setTicketKey(key);
         link.setRepoFullName(repoFullName);
-        link.setBranchName(key);
+        link.setBranchName(branchFound ? matchedBranchName : key);
         link.setStatus(status);
         link.setLastCheckedAt(Instant.now());
         linkRepository.save(link);
@@ -67,6 +79,7 @@ public class TicketController {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("ticketKey", key);
         result.put("repo", repoFullName);
+        result.put("branchName", matchedBranchName);
         result.put("status", status);
         result.put("jiraTicket", jiraFound ? jiraResponse.getBody() : null);
         result.put("githubBranch", branchFound ? branchResponse.getBody() : null);
