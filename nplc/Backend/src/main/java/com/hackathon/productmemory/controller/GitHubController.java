@@ -1,62 +1,52 @@
 package com.hackathon.productmemory.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
+import com.hackathon.productmemory.entity.IntegrationConnection;
+import com.hackathon.productmemory.integration.ConnectionCall;
+import com.hackathon.productmemory.integration.GitHubClient;
+import com.hackathon.productmemory.service.IntegrationConnectionService;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
 
-// Thin passthrough to the GitHub REST API, using a personal access token (PAT).
-// Point github.owner/github.repo (see application.properties) at your PERSONAL sandbox repo,
-// never a company repo.
+import java.util.List;
+
+/**
+ * GitHub passthrough, scoped to the calling tenant.
+ *
+ * <p>A tenant owns any number of repos, each with its own token, so there is no single
+ * owner/repo baked in at startup any more. Each call runs against the tenant's GitHub
+ * connections, or one named by {@code connectionId}.
+ */
 @RestController
 @RequestMapping("/github")
 public class GitHubController {
 
-    private final RestClient restClient;
-    private final String owner;
-    private final String repo;
+    private final IntegrationConnectionService connectionService;
+    private final GitHubClient gitHubClient;
 
-    public GitHubController(
-            @Value("${github.api-url}") String apiUrl,
-            @Value("${github.token}") String token,
-            @Value("${github.owner}") String owner,
-            @Value("${github.repo}") String repo
-    ) {
-        this.restClient = RestClient.builder()
-                .baseUrl(apiUrl)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .defaultHeader(HttpHeaders.ACCEPT, "application/vnd.github+json")
-                .defaultHeader("X-GitHub-Api-Version", "2022-11-28")
-                .build();
-        this.owner = owner;
-        this.repo = repo;
+    public GitHubController(IntegrationConnectionService connectionService, GitHubClient gitHubClient) {
+        this.connectionService = connectionService;
+        this.gitHubClient = gitHubClient;
     }
 
-    // GET /github/branches
-    // -> https://api.github.com/repos/{owner}/{repo}/branches
+    // GET /github/branches[?connectionId=...]
     @GetMapping("/branches")
-    public Object listBranches() {
-        return restClient.get()
-                .uri("/repos/{owner}/{repo}/branches?per_page=100", owner, repo)
-                .retrieve()
-                .body(Object.class);
+    public List<ConnectionCall<Object>> listBranches(
+            @RequestParam(required = false) String connectionId) {
+        return connectionService.fanOut(resolve(connectionId), gitHubClient::listBranches);
     }
 
-    // GET /github/branches/{*name} - supports branch names with slashes, e.g. feature/CJ-01
-    // -> https://api.github.com/repos/{owner}/{repo}/branches/{name}
-    @GetMapping("/branches/{*name}")
-    public ResponseEntity<Object> getBranch(@PathVariable String name) {
-        String cleanName = (name != null && name.startsWith("/")) ? name.substring(1) : name;
-        try {
-            Object body = restClient.get()
-                    .uri("/repos/{owner}/{repo}/branches/{name}", owner, repo, cleanName)
-                    .retrieve()
-                    .body(Object.class);
-            return ResponseEntity.ok(body);
-        } catch (HttpClientErrorException.NotFound e) {
-            return ResponseEntity.notFound().build();
-        }
+    // GET /github/branches/{name}[?connectionId=...] - exact-name lookup, so "CJ-01" never
+    // resolves to "CJ-011". Returns one entry per repo, since a branch of the same name can
+    // exist in several of a tenant's repos.
+    @GetMapping("/branches/{name}")
+    public List<ConnectionCall<Object>> getBranch(@PathVariable String name,
+                                                  @RequestParam(required = false) String connectionId) {
+        return connectionService.fanOut(resolve(connectionId),
+                connection -> gitHubClient.findBranch(connection, name).orElse(null));
+    }
+
+    private List<IntegrationConnection> resolve(String connectionId) {
+        return connectionId == null
+                ? connectionService.byProvider(IntegrationConnection.PROVIDER_GITHUB)
+                : List.of(connectionService.require(connectionId));
     }
 }

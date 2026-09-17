@@ -1,77 +1,66 @@
 package com.hackathon.productmemory.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
+import com.hackathon.productmemory.entity.IntegrationConnection;
+import com.hackathon.productmemory.integration.ConnectionCall;
+import com.hackathon.productmemory.integration.JiraClient;
+import com.hackathon.productmemory.service.IntegrationConnectionService;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
 
-import java.util.Base64;
+import java.util.List;
 
-// Thin passthrough to the Jira Cloud REST API v3, using Basic Auth (email + API token) -
-// same auth style you tested in Postman. Point jira.site-url/jira.email/jira.api-token
-// (see application.properties) at your PERSONAL Jira sandbox, never a company site.
+/**
+ * Jira Cloud passthrough, scoped to the calling tenant.
+ *
+ * <p>This used to hold one RestClient built at startup from this application's own
+ * environment. A tenant now owns any number of Jira sites, so each call resolves the
+ * tenant's connections and runs against them - optionally narrowed to one with
+ * {@code connectionId}.
+ *
+ * <p>Responses are per connection, including failures: a site that rejected its
+ * credential appears as an entry carrying an error, next to the ones that answered.
+ */
 @RestController
 @RequestMapping("/jira")
 public class JiraController {
 
-    private final RestClient restClient;
-    private final String basicAuthHeader;
+    private final IntegrationConnectionService connectionService;
+    private final JiraClient jiraClient;
 
-    public JiraController(
-            @Value("${jira.site-url}") String siteUrl,
-            @Value("${jira.email}") String email,
-            @Value("${jira.api-token}") String apiToken
-    ) {
-        this.restClient = RestClient.builder().baseUrl(siteUrl).build();
-        String creds = email + ":" + apiToken;
-        this.basicAuthHeader = "Basic " + Base64.getEncoder().encodeToString(creds.getBytes());
+    public JiraController(IntegrationConnectionService connectionService, JiraClient jiraClient) {
+        this.connectionService = connectionService;
+        this.jiraClient = jiraClient;
     }
 
-    // GET /jira/projects
-    // -> https://{site}/rest/api/3/project/search
+    // GET /jira/projects[?connectionId=...]
     @GetMapping("/projects")
-    public Object listProjects() {
-        return restClient.get()
-                .uri("/rest/api/3/project/search")
-                .header(HttpHeaders.AUTHORIZATION, basicAuthHeader)
-                .retrieve()
-                .body(Object.class);
+    public List<ConnectionCall<Object>> listProjects(
+            @RequestParam(required = false) String connectionId) {
+        return connectionService.fanOut(resolve(connectionId), jiraClient::listProjects);
     }
 
-    // GET /jira/tickets?jql=project = "HAC" ORDER BY created DESC&fields=*all
-    // -> https://{site}/rest/api/3/search/jql?jql=...&fields=...
+    // GET /jira/tickets?jql=...&fields=*all[&connectionId=...]
     @GetMapping("/tickets")
-    public Object searchTickets(
+    public List<ConnectionCall<Object>> searchTickets(
             @RequestParam String jql,
-            @RequestParam(defaultValue = "*all") String fields
-    ) {
-        return restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/rest/api/3/search/jql")
-                        .queryParam("jql", jql)
-                        .queryParam("fields", fields)
-                        .build())
-                .header(HttpHeaders.AUTHORIZATION, basicAuthHeader)
-                .retrieve()
-                .body(Object.class);
+            @RequestParam(defaultValue = "*all") String fields,
+            @RequestParam(required = false) String connectionId) {
+        return connectionService.fanOut(resolve(connectionId),
+                connection -> jiraClient.search(connection, jql, fields));
     }
 
-    // GET /jira/tickets/{key} - exact-key lookup only. Jira looks issues up by their exact key,
-    // so a request for "CJ-01" can never return "CJ-011".
-    // -> https://{site}/rest/api/3/issue/{key}
+    // GET /jira/tickets/{key}[?connectionId=...] - exact-key lookup, so "CJ-01" never
+    // resolves to "CJ-011". The same key can legitimately exist in two of a tenant's
+    // sites, which is why this returns every match rather than one.
     @GetMapping("/tickets/{key}")
-    public ResponseEntity<Object> getTicket(@PathVariable String key) {
-        try {
-            Object body = restClient.get()
-                    .uri("/rest/api/3/issue/{key}", key)
-                    .header(HttpHeaders.AUTHORIZATION, basicAuthHeader)
-                    .retrieve()
-                    .body(Object.class);
-            return ResponseEntity.ok(body);
-        } catch (HttpClientErrorException.NotFound e) {
-            return ResponseEntity.notFound().build();
-        }
+    public List<ConnectionCall<Object>> getTicket(@PathVariable String key,
+                                                  @RequestParam(required = false) String connectionId) {
+        return connectionService.fanOut(resolve(connectionId),
+                connection -> jiraClient.findIssue(connection, key).orElse(null));
+    }
+
+    private List<IntegrationConnection> resolve(String connectionId) {
+        return connectionId == null
+                ? connectionService.byProvider(IntegrationConnection.PROVIDER_JIRA)
+                : List.of(connectionService.require(connectionId));
     }
 }

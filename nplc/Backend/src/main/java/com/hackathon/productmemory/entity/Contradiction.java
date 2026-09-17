@@ -2,6 +2,7 @@ package com.hackathon.productmemory.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.TenantId;
 import java.time.Instant;
 
 @Entity
@@ -10,6 +11,11 @@ import java.time.Instant;
 public class Contradiction {
     @Id
     private String id;
+
+    // Stamped on insert and appended to every query by Hibernate - see TenantIdentifierResolver.
+    @TenantId
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private String tenantId;
 
     @Column(nullable = false)
     private String initiativeId;
