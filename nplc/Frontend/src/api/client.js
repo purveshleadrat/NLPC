@@ -17,6 +17,9 @@ export const getContradictions = () => api.get('/contradictions')
 export const askQuestion = (question) =>
   api.post('/ask', { question })
 
+
+
+// kkfkk
 // Resume brief
 export const getResumeBrief = () => api.get('/resume-brief')
 

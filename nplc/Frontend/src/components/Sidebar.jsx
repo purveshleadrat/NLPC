@@ -15,6 +15,7 @@ const links = [
   { to: '/ask', label: 'Ask Context', icon: MessageSquare },
   { to: '/brief', label: 'Resume Brief', icon: FileText },
   { to: '/tickets', label: 'Tickets', icon: Ticket },
+  { to: '/jira', label: 'Jira Tickets', icon: Ticket },
 ]
 
 export default function Sidebar() {
