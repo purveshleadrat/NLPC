@@ -20,6 +20,12 @@ export JIRA_SITE_URL=https://yoursandbox.atlassian.net
 export JIRA_EMAIL=you@example.com
 export JIRA_API_TOKEN=your_personal_api_token
 export ANTHROPIC_API_KEY=your_key   # not required yet, reserved for the extraction pipeline
+
+# Supabase Postgres - use the SESSION pooler / direct connection host (port 5432),
+# NOT the transaction pooler on 6543, which breaks Hibernate prepared statements.
+export SUPABASE_DB_HOST=db.yourproject.supabase.co
+export SUPABASE_DB_USER=postgres
+export SUPABASE_DB_PASSWORD=your_db_password
 ```
 
 Run it:
@@ -35,6 +41,19 @@ Server starts on `http://localhost:4000`.
 - `GET /jira/projects` — list all projects on the connected Jira site
 - `GET /jira/tickets?jql=...&fields=*all` — search tickets by JQL
 
+Everything below is scoped to one initiative. Create an initiative first, then pass its id
+as `initiativeId` on every other call.
+
+- `POST /initiatives` — body `{ "name": "...", "jiraKey": "...", "repo": "..." }`
+- `GET /initiatives` — newest first
+- `GET /initiatives/{id}`
+- `POST /sources?initiativeId=...` — body is a source
+- `GET /sources?initiativeId=...[&type=meeting_note]`
+- `POST /events?initiativeId=...` — body is an event
+- `GET /events?initiativeId=...[&status=CURRENT][&eventType=DECISION]`
+- `POST /constraints?initiativeId=...` / `GET /constraints?initiativeId=...[&status=ACTIVE]`
+- `POST /contradictions?initiativeId=...` / `GET /contradictions?initiativeId=...[&unresolved=true]`
+
 ## Working on this as a team
 
 ```bash
@@ -48,9 +67,10 @@ Open a PR into `main` when ready — don't push directly to `main`.
 
 ```
 src/main/java/com/hackathon/productmemory/
-  controller/   REST endpoints (JiraController is the only wired-up one so far)
-  entity/       JPA entities for the decision model (Source, Event, Constraint, Contradiction) —
-                scaffolded, not yet wired to any endpoint
+  controller/   REST endpoints (Jira passthrough + initiative-scoped CRUD)
+  service/      Initiative scoping - assigns ids, stamps initiativeId, filters reads
+  entity/       JPA entities for the decision model (Initiative, Source, Event, Constraint,
+                Contradiction) - everything but Initiative carries an initiativeId
   repository/   Spring Data repositories for the entities above
   dto/          Shared data shapes (NormalizedSource — the common shape every source adapter
                 will produce)

@@ -12,13 +12,15 @@ public class Source {
     private String id;
 
     @Column(nullable = false)
+    private String initiativeId;
+
+    @Column(nullable = false)
     private String type; // meeting_note | transcript | requirement_doc | ticket | commit | design_ref | release_note
 
     @Column(nullable = false)
     private String title;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "text", nullable = false)
     private String rawText;
 
     @Column(nullable = false)

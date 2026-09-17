@@ -14,13 +14,15 @@ public class Event {
     private String id;
 
     @Column(nullable = false)
+    private String initiativeId;
+
+    @Column(nullable = false)
     private String sourceId;
 
     @Column(nullable = false)
     private String eventType; // DECISION | PROPOSAL | CHANGE | ASSUMPTION | DEPENDENCY | OPEN_QUESTION
 
-    @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "text", nullable = false)
     private String summary;
 
     private String decidedBy;

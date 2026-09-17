@@ -4,21 +4,25 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.Instant;
 
+// Table name is quoted because CONSTRAINTS is a SQL keyword - unquoted it can
+// blow up at schema-generation time on Postgres.
 @Entity
-@Table(name = "constraints")
+@Table(name = "\"constraints\"")
 @Data
 public class Constraint {
     @Id
     private String id;
 
     @Column(nullable = false)
+    private String initiativeId;
+
+    @Column(nullable = false)
     private String sourceEventId;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "text", nullable = false)
     private String statement;
 
-    @Lob
+    @Column(columnDefinition = "text")
     private String reason;
 
     @Column(nullable = false)
