@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import IngestSources from './pages/IngestSources'
 import DecisionTimeline from './pages/DecisionTimeline'
@@ -9,9 +9,11 @@ import Tickets from './pages/Tickets'
 import JiraTickets from './pages/JiraTickets'
 import JiraTicketDetail from './pages/JiraTicketDetail'
 
-export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div
+      className="min-h-screen flex"
+      style={{ background: dark ? '#0d0d1a' : '#f3f4f6' }}
+    >
       <Sidebar />
       <main className="ml-56 flex-1 p-8 overflow-y-auto">
         <Routes>
@@ -26,5 +28,13 @@ export default function App() {
         </Routes>
       </main>
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   )
 }
