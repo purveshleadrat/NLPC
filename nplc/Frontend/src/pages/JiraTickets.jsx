@@ -1,93 +1,94 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { searchJiraTickets } from '../api/client'
-import { Ticket, Loader2, RefreshCw, AlertTriangle, Search, ChevronRight } from 'lucide-react'
+import { getJiraProjects, searchJiraTickets } from '../api/client'
+import { Loader2, AlertTriangle, Search, Star, ChevronRight, Ticket } from 'lucide-react'
 
-const STATUS_COLORS = {
-  'To Do':       'bg-gray-100 text-gray-600',
-  'In Progress': 'bg-blue-100 text-blue-700',
-  'Done':        'bg-green-100 text-green-700',
-  'Blocked':     'bg-red-100 text-red-700',
-}
-
-const PRIORITY_COLORS = {
-  Highest: 'text-red-600',
-  High:    'text-orange-500',
-  Medium:  'text-yellow-500',
-  Low:     'text-blue-400',
-  Lowest:  'text-gray-400',
-}
-
-function statusClass(status) {
-  return STATUS_COLORS[status] ?? 'bg-gray-100 text-gray-600'
-}
-
-function priorityClass(priority) {
-  return PRIORITY_COLORS[priority] ?? 'text-gray-400'
-}
+const PROJECT_COLORS = [
+  'bg-green-500', 'bg-blue-500', 'bg-purple-500', 'bg-orange-500',
+  'bg-pink-500', 'bg-teal-500', 'bg-yellow-500', 'bg-red-500', 'bg-indigo-500',
+]
 
 export default function JiraTickets() {
   const navigate = useNavigate()
-  const [jql, setJql] = useState('ORDER BY created DESC')
-  const [inputJql, setInputJql] = useState('ORDER BY created DESC')
-  const [tickets, setTickets] = useState([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const [projects, setProjects] = useState([])
+  const [ticketCounts, setTicketCounts] = useState({})
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [search, setSearch] = useState('')
+  const [pinned, setPinned] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('jira_pinned') || '[]') } catch { return [] }
+  })
 
-  async function load(query) {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await searchJiraTickets(query)
-      const data = res.data
-      setTickets(data.issues ?? [])
-      setTotal(data.total ?? 0)
-    } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to fetch tickets.')
-      setTickets([])
-    } finally {
-      setLoading(false)
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await getJiraProjects()
+        const list = res.data?.values ?? []
+        setProjects(list)
+
+        // fetch ticket counts per project in parallel
+        const counts = {}
+        await Promise.all(list.map(async (p) => {
+          try {
+            const r = await searchJiraTickets(`project = "${p.key}"`)
+            counts[p.key] = r.data?.total ?? 0
+          } catch {
+            counts[p.key] = 0
+          }
+        }))
+        setTicketCounts(counts)
+      } catch (err) {
+        setError(err?.response?.data?.message || err.message || 'Failed to load projects.')
+      } finally {
+        setLoading(false)
+      }
     }
+    load()
+  }, [])
+
+  function togglePin(key) {
+    setPinned(prev => {
+      const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+      localStorage.setItem('jira_pinned', JSON.stringify(next))
+      return next
+    })
   }
 
-  useEffect(() => { load(jql) }, [])
+  const filtered = projects.filter(p =>
+    !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.key.toLowerCase().includes(search.toLowerCase())
+  )
 
-  function handleSearch(e) {
-    e.preventDefault()
-    setJql(inputJql)
-    load(inputJql)
-  }
+  const sorted = [...filtered].sort((a, b) => {
+    const ap = pinned.includes(a.key) ? 0 : 1
+    const bp = pinned.includes(b.key) ? 0 : 1
+    return ap - bp
+  })
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Jira Tickets</h2>
-        <p className="text-gray-500 text-sm">Search and browse tickets from your Jira project using JQL.</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">Initiatives</h2>
+        <p className="text-gray-500 text-sm">{projects.length} projects</p>
       </div>
 
-      {/* Search bar */}
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-        <div className="flex-1 relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+      {/* Search + filters */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            value={inputJql}
-            onChange={e => setInputJql(e.target.value)}
-            placeholder='e.g. project = "HAC" ORDER BY created DESC'
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name or key..."
+            className="pl-8 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white w-52"
           />
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-60 transition-colors"
-        >
-          {loading ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
-          {loading ? 'Loading…' : 'Search'}
-        </button>
-      </form>
+        <FilterPill active>All</FilterPill>
+        <FilterPill>Pinned ({pinned.length})</FilterPill>
+      </div>
 
       {/* Error */}
       {error && (
@@ -97,59 +98,96 @@ export default function JiraTickets() {
         </div>
       )}
 
-      {/* Results count */}
-      {!loading && !error && tickets.length > 0 && (
-        <p className="text-xs text-gray-500 mb-3">
-          Showing <span className="font-semibold text-gray-700">{tickets.length}</span> of {total} tickets
-        </p>
-      )}
-
-      {/* Empty state */}
-      {!loading && !error && tickets.length === 0 && (
-        <div className="text-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-          <Ticket size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No tickets found. Try adjusting your JQL query.</p>
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center gap-2 text-gray-400 py-20 justify-center">
+          <Loader2 size={20} className="animate-spin" />
+          <span className="text-sm">Loading projects…</span>
         </div>
       )}
 
-      {/* Ticket cards */}
-      {tickets.length > 0 && (
-        <div className="grid grid-cols-1 gap-3">
-          {tickets.map(issue => {
-            const f = issue.fields ?? {}
-            const status   = f.status?.name ?? '—'
-            const priority = f.priority?.name ?? '—'
-            const assignee = f.assignee?.displayName ?? 'Unassigned'
-            const updated  = f.updated ? new Date(f.updated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+      {/* Empty */}
+      {!loading && !error && sorted.length === 0 && (
+        <div className="text-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+          <Ticket size={40} className="mx-auto mb-3 opacity-30" />
+          <p className="text-sm">No projects found.</p>
+        </div>
+      )}
+
+      {/* Project cards grid */}
+      {!loading && sorted.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sorted.map((project, i) => {
+            const color = PROJECT_COLORS[i % PROJECT_COLORS.length]
+            const isPinned = pinned.includes(project.key)
+            const count = ticketCounts[project.key]
 
             return (
               <div
-                key={issue.id}
-                onClick={() => navigate(`/jira/${issue.key}`)}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all"
+                key={project.id}
+                onClick={() => navigate(`/jira/${project.key}`)}
+                className="bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group relative"
               >
-                {/* Key + Summary */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">{issue.key}</span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusClass(status)}`}>{status}</span>
+                {/* Pin button */}
+                <button
+                  onClick={e => { e.stopPropagation(); togglePin(project.key) }}
+                  className={`absolute top-4 right-4 transition-colors ${isPinned ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
+                >
+                  <Star size={15} fill={isPinned ? 'currentColor' : 'none'} />
+                </button>
+
+                {/* Color dot + name */}
+                <div className="flex items-start gap-3 mb-3">
+                  <span className={`w-2.5 h-2.5 rounded-full ${color} mt-1.5 flex-shrink-0`} />
+                  <div className="min-w-0 pr-5">
+                    <p className="font-bold text-gray-900 text-sm leading-tight">{project.name}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {project.key} · <span className="text-gray-500">{project.key.toLowerCase()}</span>
+                    </p>
                   </div>
-                  <p className="text-sm font-medium text-gray-900 truncate">{f.summary ?? 'No summary'}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {f.issuetype?.name ?? 'Issue'} · Assignee: {assignee} · Updated: {updated}
-                  </p>
                 </div>
 
-                {/* Priority + arrow */}
-                <div className="flex-shrink-0 flex items-center gap-3">
-                  <span className={`text-xs font-semibold ${priorityClass(priority)}`}>↑ {priority}</span>
-                  <ChevronRight size={15} className="text-gray-300" />
+                {/* Stats */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {count !== undefined ? (
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium">
+                      {count} tickets
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-300">loading…</span>
+                  )}
+                  <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium capitalize">
+                    {project.projectTypeKey}
+                  </span>
+                  {isPinned && (
+                    <span className="text-xs bg-yellow-50 text-yellow-600 px-2.5 py-1 rounded-full font-medium">
+                      Pinned
+                    </span>
+                  )}
                 </div>
+
+                {/* Arrow */}
+                <ChevronRight
+                  size={15}
+                  className="absolute bottom-4 right-4 text-gray-300 group-hover:text-indigo-400 transition-colors"
+                />
               </div>
             )
           })}
         </div>
       )}
     </div>
+  )
+}
+
+function FilterPill({ children, active }) {
+  return (
+    <button className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+      active
+        ? 'bg-indigo-600 text-white border-indigo-600'
+        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+    }`}>
+      {children}
+    </button>
   )
 }
