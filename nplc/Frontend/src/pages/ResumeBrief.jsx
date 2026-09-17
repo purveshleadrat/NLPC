@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getResumeBrief } from '../api/client'
+import { useInitiative } from '../context/InitiativeContext'
 import { FileText, Loader2, RefreshCw, AlertTriangle, CheckCircle, Clock, ArrowRight, Sparkles } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
@@ -82,6 +83,7 @@ function BriefSection({ section, value, dark }) {
 
 export default function ResumeBrief() {
   const { dark } = useTheme()
+  const { currentId } = useInitiative()
   const [brief, setBrief] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -89,7 +91,7 @@ export default function ResumeBrief() {
   async function load() {
     setLoading(true); setError(null)
     try {
-      const res = await getResumeBrief()
+      const res = await getResumeBrief(currentId)
       setBrief(res.data)
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Failed to generate brief.')

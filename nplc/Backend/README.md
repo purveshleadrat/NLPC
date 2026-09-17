@@ -95,15 +95,26 @@ working on it, and the token identifies the tenant rather than a person.
 ```bash
 POST /auth/signup   { "tenantName": "Acme", "tenantSlug": "acme", "password": "..." }
 POST /auth/login    { "tenantSlug": "acme", "password": "..." }
+POST /auth/renew    (no body; send the current token)   # fresh token, keeps a session alive
 ```
 
-Both return `{ accessToken, expiresInSeconds, tenantId, tenantSlug }`. Every other endpoint
-needs `Authorization: Bearer <accessToken>`. Any number of people can log in with the same
-credentials at once.
+All three return `{ accessToken, expiresInSeconds, tenantId, tenantSlug }`. Every other
+endpoint needs `Authorization: Bearer <accessToken>`. Any number of people can log in with the
+same credentials at once.
 
-The token is valid for **12 hours** and there is no refresh token: refresh exists to keep
-access tokens short-lived and to revoke one person's session, and neither applies when there
-are no separate people to distinguish.
+The token is valid for **12 hours**. There is no refresh token, deliberately: a refresh token
+exists so access tokens can be short-lived while one person's session stays revocable, and
+neither half applies when there are no separate people to distinguish. It would be a table and
+an endpoint to reach the same place a longer expiry already reaches.
+
+`POST /auth/renew` covers the gap instead. Send a token that has **not yet expired** and get a
+fresh one, so a session in active use never times out. It is not a public endpoint — an expired
+token cannot renew itself, so an abandoned session still dies on its own.
+
+**What the frontend needs to do:** store the token, call `/auth/renew` on app load and every
+few hours, and intercept `401` to send the user back to login. Without that interceptor an
+expired token shows up as empty screens rather than a login prompt. Do not store the password
+in the browser to re-login automatically — `/auth/renew` exists so you don't have to.
 
 Two consequences, stated here because nothing in the code will remind you:
 

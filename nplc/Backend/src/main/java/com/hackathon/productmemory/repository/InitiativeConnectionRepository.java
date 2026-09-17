@@ -9,4 +9,6 @@ public interface InitiativeConnectionRepository extends JpaRepository<Initiative
     List<InitiativeConnection> findByInitiativeId(String initiativeId);
 
     void deleteByInitiativeIdAndConnectionId(String initiativeId, String connectionId);
+
+    void deleteByInitiativeId(String initiativeId);
 }

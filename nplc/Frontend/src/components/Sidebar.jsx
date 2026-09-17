@@ -10,16 +10,24 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Plus,
+  LogOut,
+  Download,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import { useInitiative } from '../context/InitiativeContext'
+import { useAuth } from '../context/AuthContext'
 
 const links = [
   { to: '/', label: 'Ingest Sources', icon: Upload },
+  { to: '/import', label: 'Import Jira / Git', icon: Download },
   { to: '/timeline', label: 'Decision Timeline', icon: GitCommitHorizontal },
   { to: '/impact', label: 'Change Impact', icon: Zap },
   { to: '/ask', label: 'Ask Context', icon: MessageSquare },
   { to: '/brief', label: 'Resume Brief', icon: FileText },
-  { to: '/jira', label: 'Initiatives', icon: Ticket },
+  { to: '/jira', label: 'Jira Browser', icon: Ticket },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
 
 
@@ -27,6 +35,15 @@ const SIDEBAR_DARK = '#131320'
 
 export default function Sidebar() {
   const { dark, toggle } = useTheme()
+  const { initiatives, currentId, select, create } = useInitiative()
+  const { tenant, logout } = useAuth()
+
+  async function newInitiative() {
+    const name = window.prompt('Name your initiative (e.g. "Bulk Update")')
+    if (name && name.trim()) {
+      try { await create(name.trim()) } catch (e) { alert(e?.response?.data?.message || e.message) }
+    }
+  }
 
   const bg          = dark ? SIDEBAR_DARK : '#ffffff'
   const borderColor = dark ? 'rgba(255,255,255,0.07)' : '#e5e7eb'
@@ -66,6 +83,40 @@ export default function Sidebar() {
           <span className="text-[10px] font-semibold leading-none" style={{ color: '#a5b4fc' }}>
             Never Lose Product Context
           </span>
+        </div>
+      </div>
+
+      {/* ── Initiative switcher ── */}
+      <div className="px-3 pb-2">
+        <div className="text-[9.5px] font-bold uppercase tracking-[0.14em] mb-1.5 px-1" style={{ color: textMuted }}>
+          Initiative
+        </div>
+        <div className="flex items-center gap-1.5">
+          <select
+            value={currentId || ''}
+            onChange={(e) => select(e.target.value)}
+            className="flex-1 min-w-0 rounded-lg px-2 py-1.5 text-[12px] font-medium outline-none cursor-pointer"
+            style={{
+              background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+              border: `1px solid ${borderColor}`,
+              color: dark ? '#e5e7eb' : '#374151',
+            }}
+          >
+            {initiatives.length === 0 && <option value="">No initiatives yet</option>}
+            {initiatives.map((i) => (
+              <option key={i.id} value={i.id}>{i.name}</option>
+            ))}
+          </select>
+          <button
+            onClick={newInitiative}
+            title="New initiative"
+            className="rounded-lg p-1.5 flex-shrink-0 transition-colors"
+            style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', border: `1px solid ${borderColor}`, color: textMuted }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#a5b4fc' }}
+            onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
+          >
+            <Plus size={14} />
+          </button>
         </div>
       </div>
 
@@ -137,8 +188,20 @@ export default function Sidebar() {
           </button>
         </div>
 
+        <button
+          onClick={logout}
+          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors"
+          style={{ background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${borderColor}`, color: textMuted }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#f87171' }}
+          onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
+          title="Sign out"
+        >
+          <LogOut size={12} />
+          {tenant?.tenantSlug ? `Sign out · ${tenant.tenantSlug}` : 'Sign out'}
+        </button>
+
         <p className="text-center mt-2 text-[9.5px] font-medium" style={{ color: dark ? '#374151' : '#9ca3af' }}>
-          v1.0 · Powered by Claude AI
+          v1.0 · Powered by Gemini AI
         </p>
       </div>
     </aside>

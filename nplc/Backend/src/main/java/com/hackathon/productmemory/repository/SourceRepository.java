@@ -8,4 +8,6 @@ import java.util.List;
 public interface SourceRepository extends JpaRepository<Source, String> {
     List<Source> findByInitiativeId(String initiativeId);
     List<Source> findByInitiativeIdAndType(String initiativeId, String type);
+    List<Source> findByInitiativeIdAndExternalRef(String initiativeId, String externalRef);
+    void deleteByInitiativeId(String initiativeId);
 }

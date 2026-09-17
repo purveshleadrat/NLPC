@@ -44,6 +44,19 @@ public class InitiativeController {
         return initiativeService.getById(id);
     }
 
+    // PUT /initiatives/{id}  body: { "name": "..." } — rename
+    @PutMapping("/{id}")
+    public Initiative rename(@PathVariable String id, @RequestBody Initiative body) {
+        return initiativeService.rename(id, body.getName());
+    }
+
+    // DELETE /initiatives/{id} — removes the initiative and everything scoped to it
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable String id) {
+        initiativeService.delete(id);
+    }
+
     // GET /initiatives/{id}/connections
     @GetMapping("/{id}/connections")
     public List<InitiativeConnection> connections(@PathVariable String id) {

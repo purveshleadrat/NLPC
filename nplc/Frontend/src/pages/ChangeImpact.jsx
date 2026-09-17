@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getEvents } from '../api/client'
+import { useInitiative } from '../context/InitiativeContext'
 import { Loader2, Zap, ChevronDown, ChevronRight, TrendingUp, Activity, RotateCcw } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
@@ -91,8 +92,12 @@ export default function ChangeImpact() {
   const [openItems, setOpenItems] = useState({})
   const [search, setSearch] = useState('')
 
+  const { currentId } = useInitiative()
+
   useEffect(() => {
-    getEvents()
+    if (!currentId) return
+    setLoading(true); setError(null)
+    getEvents(currentId)
       .then((r) => {
         const data = r.data || []
         setEvents(data)
@@ -101,9 +106,9 @@ export default function ChangeImpact() {
         Object.keys(groups).forEach((k) => { initial[k] = true })
         setOpenItems(initial)
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err?.response?.data?.message || err.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [currentId])
 
   const grouped  = groupByAffected(events)
   const filtered = Object.entries(grouped).filter(([item]) =>

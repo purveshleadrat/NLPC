@@ -44,6 +44,11 @@ public class Event {
     @Column(nullable = false)
     private String confidence = "HIGH"; // HIGH | LOW
 
+    // The exact source snippet this event was extracted from. Null for events created by
+    // hand rather than by the extractor - see V3__event_evidence.sql.
+    @Column(columnDefinition = "text")
+    private String evidence;
+
     // Fetched eagerly because open-in-view is off: the session is closed by the time
     // Jackson serialises the response, so a lazy collection fails with
     // "could not initialize proxy - no Session" on every read that has affected items.
