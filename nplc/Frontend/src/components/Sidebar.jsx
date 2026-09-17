@@ -5,6 +5,7 @@ import {
   Zap,
   MessageSquare,
   FileText,
+  Ticket,
 } from 'lucide-react'
 
 const links = [
@@ -13,6 +14,8 @@ const links = [
   { to: '/impact', label: 'Change Impact', icon: Zap },
   { to: '/ask', label: 'Ask Context', icon: MessageSquare },
   { to: '/brief', label: 'Resume Brief', icon: FileText },
+  { to: '/tickets', label: 'Tickets', icon: Ticket },
+  { to: '/jira', label: 'Jira Tickets', icon: Ticket },
 ]
 
 export default function Sidebar() {
