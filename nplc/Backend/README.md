@@ -12,13 +12,23 @@ git clone <this-repo-url>
 cd product-memory
 ```
 
-Set these environment variables before running (never point Jira vars at a company Jira site —
-use your own free personal Jira Cloud sandbox):
+Set these environment variables before running (never point Jira/GitHub vars at a company
+site or repo — use your own free personal Jira Cloud sandbox and a personal GitHub repo):
 
 ```bash
+# Supabase (Project Settings > Database > Connection string > JDBC)
+export SUPABASE_DB_URL=jdbc:postgresql://db.yourproject.supabase.co:5432/postgres?sslmode=require
+export SUPABASE_DB_USERNAME=postgres
+export SUPABASE_DB_PASSWORD=your_db_password
+
 export JIRA_SITE_URL=https://yoursandbox.atlassian.net
 export JIRA_EMAIL=you@example.com
 export JIRA_API_TOKEN=your_personal_api_token
+
+export GITHUB_TOKEN=your_personal_access_token
+export GITHUB_OWNER=your_github_username
+export GITHUB_REPO=your_sandbox_repo
+
 export ANTHROPIC_API_KEY=your_key   # not required yet, reserved for the extraction pipeline
 ```
 
@@ -34,6 +44,12 @@ Server starts on `http://localhost:4000`.
 
 - `GET /jira/projects` — list all projects on the connected Jira site
 - `GET /jira/tickets?jql=...&fields=*all` — search tickets by JQL
+- `GET /jira/tickets/{key}` — fetch one ticket by its exact key (e.g. `CJ-01` never matches `CJ-011`)
+- `GET /github/branches` — list branches on the connected repo
+- `GET /github/branches/{name}` — fetch one branch by its exact name (e.g. `CJ-01` never matches `CJ-011`)
+- `GET /tickets/{key}` — combined lookup: the Jira ticket and the GitHub branch of the same
+  exact name, since a branch is expected to be named identically to its ticket key. Each
+  lookup is upserted into the `ticket_branch_links` table in Supabase.
 
 ## Working on this as a team
 
@@ -48,18 +64,23 @@ Open a PR into `main` when ready — don't push directly to `main`.
 
 ```
 src/main/java/com/hackathon/productmemory/
-  controller/   REST endpoints (JiraController is the only wired-up one so far)
-  entity/       JPA entities for the decision model (Source, Event, Constraint, Contradiction) —
-                scaffolded, not yet wired to any endpoint
+  controller/   REST endpoints - JiraController, GitHubController, and TicketController
+                (combines the two by exact ticket key) are wired up
+  entity/       JPA entities. Source, Event, Constraint, Contradiction are scaffolded but not
+                yet wired to any endpoint. TicketBranchLink is wired up via TicketController.
   repository/   Spring Data repositories for the entities above
   dto/          Shared data shapes (NormalizedSource — the common shape every source adapter
                 will produce)
 ```
 
+Database is Supabase (hosted Postgres) — see `SUPABASE_DB_URL`/`SUPABASE_DB_USERNAME`/
+`SUPABASE_DB_PASSWORD` above. `spring.jpa.hibernate.ddl-auto=update` creates/updates tables
+(including `ticket_branch_links`) automatically on startup.
+
 ## Rules compliance (per Hackathon 2K26 rules doc)
 
-- No company Jira/GitHub credentials or real tickets/commits anywhere in this repo — Jira
-  integration must point at a personal sandbox, not `leadrat-team.atlassian.net` or any other
-  company system.
+- No company Jira/GitHub credentials or real tickets/commits anywhere in this repo — Jira and
+  GitHub integrations must point at personal sandboxes, not `leadrat-team.atlassian.net`,
+  a company GitHub org, or any other company system.
 - No secrets committed — all credentials are environment variables, `.gitignore` excludes `.env`.
 - Sample/demo data used elsewhere in this project (fixtures, if added) is entirely synthetic.

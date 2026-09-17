@@ -27,3 +27,13 @@ export const getResumeBrief = () => api.get('/resume-brief')
 export const getJiraProjects = () => api.get('/jira/projects')
 export const searchJiraTickets = (jql) =>
   api.get('/jira/tickets', { params: { jql } })
+// Exact-key lookup - "CJ-01" never resolves to "CJ-011"
+export const getJiraTicket = (key) => api.get(`/jira/tickets/${encodeURIComponent(key)}`)
+
+// GitHub
+export const listGitHubBranches = () => api.get('/github/branches')
+// Exact-name lookup - "CJ-01" never resolves to "CJ-011"
+export const getGitHubBranch = (name) => api.get(`/github/branches/${encodeURIComponent(name)}`)
+
+// Combined Jira ticket + matching GitHub branch, by exact ticket key
+export const lookupTicket = (key) => api.get(`/tickets/${encodeURIComponent(key)}`)
