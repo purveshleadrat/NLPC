@@ -13,6 +13,7 @@ const links = [
   { to: '/brief',    label: 'Brief',            icon: FileText            },
 ]
 
+
 const SIDEBAR_DARK = '#131320'
 
 export default function Sidebar() {
