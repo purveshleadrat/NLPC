@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, String> {
-    List<Event> findByStatusOrderByEventDateAsc(String status);
-    List<Event> findByStatusOrderByEventDateDesc(String status);
-    List<Event> findAllByOrderByEventDateAsc();
-    List<Event> findByEventType(String eventType);
+    List<Event> findByInitiativeId(String initiativeId);
+    List<Event> findByInitiativeIdOrderByEventDateAsc(String initiativeId);
+    List<Event> findByInitiativeIdAndStatusOrderByEventDateAsc(String initiativeId, String status);
+    List<Event> findByInitiativeIdAndStatusOrderByEventDateDesc(String initiativeId, String status);
+    List<Event> findByInitiativeIdAndEventType(String initiativeId, String eventType);
+    List<Event> findByInitiativeIdAndSourceId(String initiativeId, String sourceId);
 }

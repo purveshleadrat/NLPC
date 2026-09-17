@@ -12,13 +12,15 @@ public class Contradiction {
     private String id;
 
     @Column(nullable = false)
+    private String initiativeId;
+
+    @Column(nullable = false)
     private String eventIdA;
 
     @Column(nullable = false)
     private String eventIdB;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "text", nullable = false)
     private String description;
 
     @Column(nullable = false)

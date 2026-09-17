@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ConstraintRepository extends JpaRepository<Constraint, String> {
-    List<Constraint> findByStatus(String status);
+    List<Constraint> findByInitiativeId(String initiativeId);
+    List<Constraint> findByInitiativeIdAndStatus(String initiativeId, String status);
 }

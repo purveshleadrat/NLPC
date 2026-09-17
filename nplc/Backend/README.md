@@ -16,7 +16,9 @@ Set these environment variables before running (never point Jira/GitHub vars at 
 site or repo — use your own free personal Jira Cloud sandbox and a personal GitHub repo):
 
 ```bash
-# Supabase (Project Settings > Database > Connection string > JDBC)
+# Supabase (Project Settings > Database > Connection string > JDBC). Use the SESSION
+# pooler / direct connection on port 5432 - the transaction pooler on 6543 breaks
+# Hibernate prepared statements.
 export SUPABASE_DB_URL=jdbc:postgresql://db.yourproject.supabase.co:5432/postgres?sslmode=require
 export SUPABASE_DB_USERNAME=postgres
 export SUPABASE_DB_PASSWORD=your_db_password
@@ -70,6 +72,19 @@ and use the DB password you set when creating the project.
   exact name, since a branch is expected to be named identically to its ticket key. Each
   lookup is upserted into the `ticket_branch_links` table in Supabase.
 
+Everything below is scoped to one initiative. Create an initiative first, then pass its id
+as `initiativeId` on every other call.
+
+- `POST /initiatives` — body `{ "name": "...", "jiraKey": "...", "repo": "..." }`
+- `GET /initiatives` — newest first
+- `GET /initiatives/{id}`
+- `POST /sources?initiativeId=...` — body is a source
+- `GET /sources?initiativeId=...[&type=meeting_note]`
+- `POST /events?initiativeId=...` — body is an event
+- `GET /events?initiativeId=...[&status=CURRENT][&eventType=DECISION]`
+- `POST /constraints?initiativeId=...` / `GET /constraints?initiativeId=...[&status=ACTIVE]`
+- `POST /contradictions?initiativeId=...` / `GET /contradictions?initiativeId=...[&unresolved=true]`
+
 ## Working on this as a team
 
 ```bash
@@ -83,10 +98,12 @@ Open a PR into `main` when ready — don't push directly to `main`.
 
 ```
 src/main/java/com/hackathon/productmemory/
-  controller/   REST endpoints - JiraController, GitHubController, and TicketController
-                (combines the two by exact ticket key) are wired up
-  entity/       JPA entities. Source, Event, Constraint, Contradiction are scaffolded but not
-                yet wired to any endpoint. TicketBranchLink is wired up via TicketController.
+  controller/   REST endpoints - JiraController, GitHubController and TicketController
+                (combines the two by exact ticket key), plus initiative-scoped CRUD
+  service/      Initiative scoping - assigns ids, stamps initiativeId, filters reads
+  entity/       JPA entities for the decision model (Initiative, Source, Event, Constraint,
+                Contradiction) - everything but Initiative carries an initiativeId.
+                TicketBranchLink is wired up via TicketController.
   repository/   Spring Data repositories for the entities above
   dto/          Shared data shapes (NormalizedSource — the common shape every source adapter
                 will produce)
