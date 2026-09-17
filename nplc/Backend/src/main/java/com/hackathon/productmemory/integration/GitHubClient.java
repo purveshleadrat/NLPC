@@ -1,5 +1,6 @@
 package com.hackathon.productmemory.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.hackathon.productmemory.entity.IntegrationConnection;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -41,6 +42,30 @@ public class GitHubClient {
         } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Commits on a branch, newest first. Metadata only (sha, message, author, date) - the
+     * per-commit file diffs come from {@link #getCommit}, which is a separate call each.
+     */
+    public JsonNode listCommits(IntegrationConnection connection, String branch, int perPage) {
+        return clients.forConnection(connection).get()
+                .uri("/repos/{owner}/{repo}/commits?sha={branch}&per_page={perPage}",
+                        connection.getAccountId(), connection.getRepo(), branch, perPage)
+                .retrieve()
+                .body(JsonNode.class);
+    }
+
+    /**
+     * One commit with its file list and patches (diffs). GitHub returns the unified diff of
+     * each changed file under {@code files[].patch}.
+     */
+    public JsonNode getCommit(IntegrationConnection connection, String sha) {
+        return clients.forConnection(connection).get()
+                .uri("/repos/{owner}/{repo}/commits/{sha}",
+                        connection.getAccountId(), connection.getRepo(), sha)
+                .retrieve()
+                .body(JsonNode.class);
     }
 
     /** Tries the ticket key itself first, then each known branch prefix. */

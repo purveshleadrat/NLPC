@@ -12,4 +12,5 @@ public interface EventRepository extends JpaRepository<Event, String> {
     List<Event> findByInitiativeIdAndStatusOrderByEventDateDesc(String initiativeId, String status);
     List<Event> findByInitiativeIdAndEventType(String initiativeId, String eventType);
     List<Event> findByInitiativeIdAndSourceId(String initiativeId, String sourceId);
+    void deleteByInitiativeId(String initiativeId);
 }

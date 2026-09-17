@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
-import { getEvents, getContradictions } from '../api/client'
-import { Loader2, AlertTriangle, CheckCircle2, Clock, XCircle, GitCommitHorizontal } from 'lucide-react'
+import { useEffect, useState, useCallback } from 'react'
+import { getEvents, getContradictions, syncInitiative } from '../api/client'
+import { useInitiative } from '../context/InitiativeContext'
+import { Loader2, AlertTriangle, CheckCircle2, Clock, XCircle, GitCommitHorizontal, RefreshCw } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
 const TYPE_META = {
@@ -99,16 +100,43 @@ export default function DecisionTimeline() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('ALL')
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState(null)
+  const { currentId } = useInitiative()
 
-  useEffect(() => {
-    Promise.all([getEvents(), getContradictions()])
+  const load = useCallback(() => {
+    if (!currentId) return Promise.resolve()
+    setLoading(true); setError(null)
+    return Promise.all([getEvents(currentId), getContradictions(currentId)])
       .then(([evRes, conRes]) => {
         setEvents(evRes.data || [])
         setContradictions(conRes.data || [])
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err?.response?.data?.message || err.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [currentId])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleSync() {
+    setSyncing(true); setSyncMsg(null); setError(null)
+    try {
+      const res = await syncInitiative(currentId)
+      const r = res.data
+      const parts = []
+      if (r.jiraSourcesAdded) parts.push(`${r.jiraSourcesAdded} Jira`)
+      if (r.githubSourcesAdded) parts.push(`${r.githubSourcesAdded} GitHub`)
+      const added = parts.length ? parts.join(' + ') + ' source(s)' : 'no new sources'
+      const ev = r.extraction ? `, ${r.extraction.eventsCreated} new event(s)` : ''
+      setSyncMsg(`Synced ${r.connectionsSynced} connection(s): ${added}${ev}.` +
+        (r.warnings?.length ? ` (${r.warnings.length} warning)` : ''))
+      await load()
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Sync failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const typeFilters = ['ALL', ...Object.keys(TYPE_META)]
   const filtered = filter === 'ALL' ? events : events.filter((e) => e.eventType === filter)
@@ -121,6 +149,29 @@ export default function DecisionTimeline() {
 
   return (
     <div className="max-w-3xl mx-auto">
+
+      {/* Header + Sync */}
+      <div className="flex items-center justify-between mb-5 gap-3">
+        <div>
+          <h2 className={`text-[22px] font-bold ${dark ? 'text-gray-100' : 'text-gray-800'}`}>Decision Timeline</h2>
+          <p className={`text-[13px] ${dark ? 'text-gray-500' : 'text-gray-400'}`}>Every decision, change and open question — newest first.</p>
+        </div>
+        <button
+          onClick={handleSync}
+          disabled={syncing}
+          title="Pull the latest Jira tickets and GitHub commits for this initiative and extract them"
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[14px] font-semibold transition-all border ${dark ? 'border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10' : 'border-indigo-200 text-indigo-600 hover:bg-indigo-50'} disabled:opacity-50`}
+        >
+          <RefreshCw size={15} className={syncing ? 'animate-spin' : ''} />
+          {syncing ? 'Syncing…' : 'Sync'}
+        </button>
+      </div>
+
+      {syncMsg && (
+        <div className="mb-5 flex items-center gap-2 rounded-xl px-4 py-3 text-[14px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-300">
+          <RefreshCw size={14} /> {syncMsg}
+        </div>
+      )}
 
       {/* Contradiction banner */}
       {unresolved.length > 0 && (

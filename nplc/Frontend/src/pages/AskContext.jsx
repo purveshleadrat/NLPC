@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { askQuestion } from '../api/client'
 import { Send, AlertTriangle, User, Bot, Sparkles } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import { useInitiative } from '../context/InitiativeContext'
 
 const EXAMPLE_QUESTIONS = [
   'What changed in bulk update and why?',
@@ -86,6 +87,7 @@ function Message({ msg, dark }) {
 
 export default function AskContext() {
   const { dark } = useTheme()
+  const { currentId } = useInitiative()
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -107,7 +109,7 @@ export default function AskContext() {
     setMessages((prev) => [...prev, { role: 'user', content: q }])
     setLoading(true)
     try {
-      const res = await askQuestion(q)
+      const res = await askQuestion(currentId, q)
       const data = res.data
       setMessages((prev) => [
         ...prev,

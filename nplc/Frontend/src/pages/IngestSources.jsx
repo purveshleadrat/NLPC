@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Upload, CheckCircle, AlertCircle, Loader2, Zap, Clipboard } from 'lucide-react'
-import { ingestSource } from '../api/client'
+import { Upload, CheckCircle, AlertCircle, Loader2, Zap, Clipboard, Sparkles } from 'lucide-react'
+import { ingestSource, extractFacts } from '../api/client'
 import { useTheme } from '../context/ThemeContext'
+import { useInitiative } from '../context/InitiativeContext'
 
 const SOURCE_TYPES = [
   { value: 'meeting_note',    label: 'Meeting Note' },
@@ -89,11 +90,14 @@ Blocked by: NPLC-72 (Activity Feed API)`,
 
 export default function IngestSources() {
   const { dark } = useTheme()
+  const { currentId } = useInitiative()
   const [form, setForm] = useState({
     type: 'meeting_note', title: '', rawText: '', docDate: '', author: '', externalRef: '',
   })
   const [status, setStatus] = useState(null)
   const [message, setMessage] = useState('')
+  const [extracting, setExtracting] = useState(false)
+  const [extractMsg, setExtractMsg] = useState('')
 
   function loadSample(sample) {
     setForm({ type: sample.type, title: sample.title, rawText: sample.rawText,
@@ -108,13 +112,33 @@ export default function IngestSources() {
     }
     setStatus('loading')
     try {
-      await ingestSource(form)
+      await ingestSource(currentId, form)
       setStatus('ok')
-      setMessage(`"${form.title}" ingested successfully.`)
+      setMessage(`"${form.title}" ingested. Click "Extract facts" to turn sources into decisions.`)
       setForm({ type: 'meeting_note', title: '', rawText: '', docDate: '', author: '', externalRef: '' })
     } catch (err) {
       setStatus('error')
       setMessage(err?.response?.data?.message || err.message || 'Ingestion failed.')
+    }
+  }
+
+  async function handleExtract() {
+    setExtracting(true); setExtractMsg('')
+    try {
+      const res = await extractFacts(currentId)
+      const r = res.data
+      setExtractMsg(
+        r.sourcesProcessed === 0
+          ? 'Nothing new to extract — every source already has facts.'
+          : `Extracted ${r.eventsCreated} event(s) from ${r.sourcesProcessed} source(s)` +
+            `${r.eventsSuperseded ? `, superseded ${r.eventsSuperseded}` : ''}` +
+            `${r.constraintsCreated ? `, ${r.constraintsCreated} constraint(s)` : ''}` +
+            `${r.contradictionsCreated ? `, ${r.contradictionsCreated} contradiction(s)` : ''}. See the Timeline.`,
+      )
+    } catch (err) {
+      setExtractMsg('Extraction failed: ' + (err?.response?.data?.message || err.message))
+    } finally {
+      setExtracting(false)
     }
   }
 
@@ -239,14 +263,33 @@ export default function IngestSources() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={status === 'loading'}
-            className="flex items-center gap-2 brand-gradient text-white px-5 py-2.5 rounded-xl text-[16px] font-semibold hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-indigo-500/20"
-          >
-            {status === 'loading' ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
-            {status === 'loading' ? 'Ingesting…' : 'Ingest Source'}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="flex items-center gap-2 brand-gradient text-white px-5 py-2.5 rounded-xl text-[16px] font-semibold hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-indigo-500/20"
+            >
+              {status === 'loading' ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
+              {status === 'loading' ? 'Ingesting…' : 'Ingest Source'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExtract}
+              disabled={extracting}
+              title="Send every not-yet-processed source to the LLM and turn it into decisions, constraints and contradictions"
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[16px] font-semibold transition-all border ${dark ? 'border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10' : 'border-indigo-200 text-indigo-600 hover:bg-indigo-50'} disabled:opacity-50`}
+            >
+              {extracting ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {extracting ? 'Extracting…' : 'Extract facts'}
+            </button>
+          </div>
+
+          {extractMsg && (
+            <div className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-[15px] ${dark ? 'text-indigo-300 bg-indigo-500/10 border border-indigo-500/20' : 'text-indigo-700 bg-indigo-50 border border-indigo-200'}`}>
+              <Sparkles size={15} /> {extractMsg}
+            </div>
+          )}
         </form>
       </div>
     </div>

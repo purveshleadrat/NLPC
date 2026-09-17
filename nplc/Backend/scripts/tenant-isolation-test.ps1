@@ -115,7 +115,16 @@ Check 'initiative spans 2 repos' 2 (($binds.body | ConvertFrom-Json) | Measure-O
 Check 'wrong password -> 401' 401 (Call POST '/auth/login' @{ tenantSlug="acme-$stamp"; password='wrong' }).code
 Check 'unknown tenant -> 401' 401 (Call POST '/auth/login' @{ tenantSlug="nope-$stamp"; password='correct-horse-1' }).code
 
-"=== 15. Forged and malformed tokens ==="
+"=== 15. Session renewal ==="
+$renew = Call POST '/auth/renew' $null $tokA
+Check 'renew with a valid token' 200 $renew.code $renew.body
+$renewed = ($renew.body | ConvertFrom-Json).accessToken
+Check 'renewed token works' 200 (Call GET '/initiatives' $null $renewed).code
+Check 'renewed token is still tenant A' 1 (((Call GET '/initiatives' $null $renewed).body | ConvertFrom-Json) | Measure-Object).Count
+Check 'renew without a token -> 401' 401 (Call POST '/auth/renew' $null $null).code
+Check 'renew with a forged token -> 401' 401 (Call POST '/auth/renew' $null 'not-a-token').code
+
+"=== 16. Forged and malformed tokens ==="
 Check 'forged signature -> 401' 401 (Call GET '/initiatives' $null 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOiJhbnkifQ.bogus').code
 Check 'garbage token -> 401' 401 (Call GET '/initiatives' $null 'not-a-token').code
 

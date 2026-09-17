@@ -8,4 +8,5 @@ import java.util.List;
 public interface ConstraintRepository extends JpaRepository<Constraint, String> {
     List<Constraint> findByInitiativeId(String initiativeId);
     List<Constraint> findByInitiativeIdAndStatus(String initiativeId, String status);
+    void deleteByInitiativeId(String initiativeId);
 }

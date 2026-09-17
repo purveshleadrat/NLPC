@@ -8,4 +8,5 @@ import java.util.List;
 public interface ContradictionRepository extends JpaRepository<Contradiction, String> {
     List<Contradiction> findByInitiativeId(String initiativeId);
     List<Contradiction> findByInitiativeIdAndResolvedFalse(String initiativeId);
+    void deleteByInitiativeId(String initiativeId);
 }
