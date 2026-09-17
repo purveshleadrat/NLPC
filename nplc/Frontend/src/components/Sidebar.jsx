@@ -6,6 +6,10 @@ import {
   MessageSquare,
   FileText,
   Ticket,
+  Brain,
+  Sparkles,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 
@@ -15,8 +19,7 @@ const links = [
   { to: '/impact', label: 'Change Impact', icon: Zap },
   { to: '/ask', label: 'Ask Context', icon: MessageSquare },
   { to: '/brief', label: 'Resume Brief', icon: FileText },
-  { to: '/tickets', label: 'Tickets', icon: Ticket },
-  { to: '/jira', label: 'Jira Tickets', icon: Ticket },
+  { to: '/jira', label: 'Initiatives', icon: Ticket },
 ]
 
 
