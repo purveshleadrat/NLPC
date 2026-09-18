@@ -4,7 +4,7 @@ import { Loader2, ExternalLink } from 'lucide-react'
 
 const STATUS_COLOR = {
   'To Do':       'bg-gray-100 text-gray-700',
-  'In Progress': 'bg-blue-100 text-blue-700',
+  'In Progress': 'bg-emerald-100 text-emerald-700',
   'Done':        'bg-green-100 text-green-700',
 }
 
@@ -52,7 +52,7 @@ export default function Tickets() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs text-indigo-600 font-semibold">{ticket.key}</span>
+                    <span className="font-mono text-xs text-emerald-600 font-semibold">{ticket.key}</span>
                     {ticket.status && (
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[ticket.status] || 'bg-gray-100 text-gray-600'}`}>
                         {ticket.status}
@@ -65,7 +65,7 @@ export default function Tickets() {
                   )}
                 </div>
                 {ticket.url && (
-                  <a href={ticket.url} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-indigo-600">
+                  <a href={ticket.url} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-emerald-600">
                     <ExternalLink size={15} />
                   </a>
                 )}

@@ -5,6 +5,14 @@ import { getConnections, getJiraProjects, bindConnection } from '../api/client'
 import SideSheet from './SideSheet'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { Textarea } from './ui/textarea'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select'
+
+const PRIORITIES = [
+  { value: 'HIGH', label: 'High', dot: '#f87171' },
+  { value: 'MEDIUM', label: 'Medium', dot: '#fbbf24' },
+  { value: 'LOW', label: 'Low', dot: '#60a5fa' },
+]
 
 // Jira/GitHub fields only ever show up if the tenant already has a matching connection
 // configured in Settings - there is nothing to pick from otherwise, and showing an
@@ -13,6 +21,8 @@ export default function NewInitiativeModal({ onClose }) {
   const { create } = useInitiative()
 
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [priority, setPriority] = useState('MEDIUM')
   const [connections, setConnections] = useState(null) // null = still loading
   const [jiraConnectionId, setJiraConnectionId] = useState('')
   const [jiraProjects, setJiraProjects] = useState([])
@@ -70,7 +80,7 @@ export default function NewInitiativeModal({ onClose }) {
     setSubmitting(true)
     setError(null)
     try {
-      const initiative = await create(name.trim())
+      const initiative = await create(name.trim(), description.trim() || undefined, priority)
       if (jiraConnectionId && jiraProjectKey) {
         await bindConnection(initiative.id, jiraConnectionId, jiraProjectKey)
       }
@@ -96,6 +106,38 @@ export default function NewInitiativeModal({ onClose }) {
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Notifications v2"
             />
+          </div>
+
+          <div>
+            <label className={label}>Description</label>
+            <Textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="What is this initiative about? (optional)"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className={label}>Priority</label>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIORITIES.map(p => (
+                  <SelectItem key={p.value} value={p.value}>
+                    <span
+                      style={{
+                        display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                        background: p.dot, marginRight: 8, verticalAlign: 'middle',
+                      }}
+                    />
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {connections === null && (

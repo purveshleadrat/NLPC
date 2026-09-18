@@ -1,6 +1,9 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+// In dev, Vite proxies /api -> http://localhost:4000 (see vite.config.js), so the
+// relative path works with no env var needed. In a production build there is no dev
+// server to proxy anything, so VITE_API_URL must point at the real deployed backend.
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
 
 // --- Auth token plumbing ------------------------------------------------------
 const TOKEN_KEY = 'nplc_token'
@@ -45,8 +48,11 @@ export const signup = (tenantName, tenantSlug, password) =>
 // --- Initiatives --------------------------------------------------------------
 export const getInitiatives   = () => api.get('/initiatives')
 export const getInitiative    = (id) => api.get(`/initiatives/${id}`)
-export const createInitiative = (name) => api.post('/initiatives', { name })
+export const createInitiative = (name, description, priority) =>
+  api.post('/initiatives', { name, description, priority })
 export const renameInitiative = (id, name) => api.put(`/initiatives/${id}`, { name })
+export const updateInitiative = (id, { name, description, priority }) =>
+  api.put(`/initiatives/${id}`, { name, description, priority })
 export const deleteInitiative = (id) => api.delete(`/initiatives/${id}`)
 
 // --- Connections (tenant-owned Jira/GitHub accounts) --------------------------
@@ -90,6 +96,9 @@ export const getContradictions = (initiativeId) =>
 
 // --- Extraction (LLM: raw sources -> facts) -----------------------------------
 export const extractFacts = (initiativeId) => api.post(`/initiatives/${initiativeId}/extract`)
+
+// --- Global Search ------------------------------------------------------------
+export const globalSearch = (q) => api.get('/search', { params: { q } })
 
 // --- Ask (LLM answering) ------------------------------------------------------
 export const askQuestion = (initiativeId, question) =>

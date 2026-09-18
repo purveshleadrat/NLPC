@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import Sidebar from './components/Sidebar'
 import Initiatives from './pages/Initiatives'
 import InitiativeWorkspace from './pages/InitiativeWorkspace'
@@ -10,7 +11,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { InitiativeProvider, useInitiative } from './context/InitiativeContext'
 import { FolderPlus, Menu } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import NewInitiativeModal from './components/NewInitiativeModal'
 import AppTour, { shouldShowTour } from './components/AppTour'
 
@@ -35,15 +36,29 @@ export function LoadingScreen({ dark, minHeight = '60vh' }) {
   )
 }
 
+// Pages that read/write the decision graph need an initiative selected first. On
+// /initiatives/:id this also reconciles the URL's id into context.currentId - the source
+// of truth for every child (InitiativeHeader, DecisionTimeline, ...) - so a direct visit or
+// refresh selects the right initiative instead of relying on whatever was clicked last.
 function RequireInitiative({ children }) {
   const { dark } = useTheme()
-  const { currentId, loading } = useInitiative()
+  const { id: idFromRoute } = useParams()
+  const { currentId, initiatives, loading, select } = useInitiative()
   const [showModal, setShowModal] = useState(false)
+
+  const routeIdIsValid = !idFromRoute || initiatives.some(i => i.id === idFromRoute)
+
+  useEffect(() => {
+    if (idFromRoute && routeIdIsValid && idFromRoute !== currentId) select(idFromRoute)
+  }, [idFromRoute, routeIdIsValid, currentId, select])
 
   if (loading) {
     return (
       <LoadingScreen dark={dark} />
     )
+  }
+  if (idFromRoute && !routeIdIsValid) {
+    return <Navigate to="/initiatives" replace />
   }
   if (!currentId) {
     return (
@@ -119,11 +134,22 @@ function Shell() {
 
 function AppContent() {
   const { isAuthed } = useAuth()
-  if (!isAuthed) return <Login />
+  const { dark } = useTheme()
   return (
-    <InitiativeProvider>
-      <Shell />
-    </InitiativeProvider>
+    <>
+      <Toaster theme={dark ? 'dark' : 'light'} position="top-center" richColors closeButton />
+      {isAuthed ? (
+        <InitiativeProvider>
+          <Shell />
+        </InitiativeProvider>
+      ) : (
+        <Routes>
+          <Route path="/sign-in" element={<Login />} />
+          <Route path="/sign-up" element={<Login />} />
+          <Route path="*" element={<Navigate to="/sign-in" replace />} />
+        </Routes>
+      )}
+    </>
   )
 }
 

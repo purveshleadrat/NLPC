@@ -16,10 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class InitiativeService {
+
+    private static final Set<String> VALID_PRIORITIES = Set.of("LOW", "MEDIUM", "HIGH");
 
     private final InitiativeRepository initiativeRepository;
     private final InitiativeConnectionRepository initiativeConnectionRepository;
@@ -50,6 +53,7 @@ public class InitiativeService {
         if (initiative.getName() == null || initiative.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name is required");
         }
+        initiative.setPriority(normalisePriority(initiative.getPriority()));
         if (initiative.getId() == null || initiative.getId().isBlank()) {
             initiative.setId(UUID.randomUUID().toString());
         }
@@ -63,14 +67,34 @@ public class InitiativeService {
         return initiativeRepository.findAllByOrderByCreatedAtDesc();
     }
 
+    // description and priority are only touched when present in the request body - the
+    // inline rename-from-the-card flow sends { name } alone, and must not silently clear
+    // whatever description/priority the initiative already had.
     @Transactional
-    public Initiative rename(String id, String name) {
-        if (name == null || name.isBlank()) {
+    public Initiative update(String id, Initiative changes) {
+        if (changes.getName() == null || changes.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name is required");
         }
         Initiative initiative = getById(id); // tenant-checked
-        initiative.setName(name.trim());
+        initiative.setName(changes.getName().trim());
+        if (changes.getDescription() != null) {
+            initiative.setDescription(changes.getDescription().trim());
+        }
+        if (changes.getPriority() != null) {
+            initiative.setPriority(normalisePriority(changes.getPriority()));
+        }
         return initiativeRepository.save(initiative);
+    }
+
+    private static String normalisePriority(String priority) {
+        if (priority == null || priority.isBlank()) {
+            return "MEDIUM";
+        }
+        String upper = priority.trim().toUpperCase();
+        if (!VALID_PRIORITIES.contains(upper)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "priority must be one of " + VALID_PRIORITIES);
+        }
+        return upper;
     }
 
     /**

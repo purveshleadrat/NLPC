@@ -11,15 +11,18 @@ import SourcesList from './SourcesList'
 // Add source / Add decision are side sheets (see InitiativeHeader), not tabs or pages.
 export default function InitiativeWorkspace() {
   const [tab, setTab] = useState('timeline')
+  // Bumped whenever the header imports/syncs/adds something, so the tabs refetch.
+  const [refreshTick, setRefreshTick] = useState(0)
+  const onChanged = () => setRefreshTick(t => t + 1)
 
   return (
     <div>
-      <InitiativeHeader activeTab={tab} onTabChange={setTab} />
-      {tab === 'timeline' && <DecisionTimeline />}
-      {tab === 'impact' && <ChangeImpact />}
+      <InitiativeHeader activeTab={tab} onTabChange={setTab} onChanged={onChanged} />
+      {tab === 'timeline' && <DecisionTimeline refreshTick={refreshTick} />}
+      {tab === 'impact' && <ChangeImpact refreshTick={refreshTick} />}
       {tab === 'ask' && <AskContext />}
       {tab === 'brief' && <ResumeBrief />}
-      {tab === 'sources' && <SourcesList />}
+      {tab === 'sources' && <SourcesList refreshTick={refreshTick} />}
     </div>
   )
 }

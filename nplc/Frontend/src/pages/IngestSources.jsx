@@ -32,7 +32,7 @@ Reason: The original requirement (REQ-204) allowed bulk-update across contacts, 
 
 Action items:
 - Update REQ-204 to contacts-only scope (Owner: Priya)
-- Create ticket NPLC-88 to track per-field audit trail work (Owner: Karan)
+- Create ticket NLPC-88 to track per-field audit trail work (Owner: Karan)
 - QA test cases TC-44 through TC-51 for deals bulk-update are now superseded
 
 Open question: Will the deals bulk-update be revisited in Q4? No decision yet.`,
@@ -59,17 +59,17 @@ AC-2: A confirmation dialog shows count and affected field before committing.
 AC-3: Every change is logged in the activity feed with user, timestamp and old/new values.
 AC-4: Undo is available for 60 seconds after commit.
 
-Dependencies: NPLC-88 (audit trail), NPLC-72 (activity feed).`,
+Dependencies: NLPC-88 (audit trail), NLPC-72 (activity feed).`,
   },
   {
     label: 'Ticket',
-    sub: 'NPLC-88 Audit trail',
+    sub: 'NLPC-88 Audit trail',
     icon: '🎫',
     type: 'ticket',
-    title: 'NPLC-88: Add per-field audit trail for bulk contact update',
+    title: 'NLPC-88: Add per-field audit trail for bulk contact update',
     docDate: '2025-08-13',
     author: 'Karan M.',
-    externalRef: 'NPLC-88',
+    externalRef: 'NLPC-88',
     rawText: `Title: Add per-field audit trail for bulk contact update
 Status: IN PROGRESS
 Assignee: Karan M.
@@ -84,7 +84,7 @@ Sub-tasks:
 - [ ] Expose via Activity Feed API
 - [ ] Unit tests (minimum 90% coverage)
 
-Blocked by: NPLC-72 (Activity Feed API)`,
+Blocked by: NLPC-72 (Activity Feed API)`,
   },
 ]
 
@@ -146,11 +146,11 @@ export default function IngestSources() {
   const card   = dark ? 'glass-dark' : 'glass-light shadow-sm'
   const label  = dark ? 'text-gray-400' : 'text-gray-500'
   const inp    = dark
-    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-indigo-500/60 focus:ring-indigo-500/20'
-    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
+    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-emerald-500/60 focus:ring-emerald-500/20'
+    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:ring-emerald-100'
   const sampleCard = dark
-    ? 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-indigo-500/30'
-    : 'bg-gray-50 border-gray-200 hover:bg-indigo-50 hover:border-indigo-200'
+    ? 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.07] hover:border-emerald-500/30'
+    : 'bg-gray-50 border-gray-200 hover:bg-emerald-50 hover:border-emerald-200'
 
   return (
     <div className="max-w-4xl">
@@ -166,7 +166,7 @@ export default function IngestSources() {
             <div className="text-2xl mb-2">{s.icon}</div>
             <div className={`text-[17px] font-semibold mb-0.5 ${dark ? 'text-gray-200' : 'text-gray-700'}`}>{s.label}</div>
             <div className={`text-[17px] ${dark ? 'text-gray-500' : 'text-gray-400'}`}>{s.sub}</div>
-            <div className={`mt-3 text-[16.5px] font-medium flex items-center gap-1 ${dark ? 'text-indigo-400' : 'text-indigo-500'}`}>
+            <div className={`mt-3 text-[16.5px] font-medium flex items-center gap-1 ${dark ? 'text-emerald-400' : 'text-emerald-500'}`}>
               <Clipboard size={10} /> Load sample
             </div>
           </button>
@@ -235,7 +235,7 @@ export default function IngestSources() {
                 type="text"
                 value={form.externalRef}
                 onChange={(e) => setForm({ ...form, externalRef: e.target.value })}
-                placeholder="e.g. NPLC-88, REQ-204"
+                placeholder="e.g. NLPC-88, REQ-204"
                 className={`w-full border rounded-xl px-3 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
               />
             </div>
@@ -267,7 +267,7 @@ export default function IngestSources() {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="flex items-center gap-2 brand-gradient text-white px-5 py-2.5 rounded-xl text-[16px] font-semibold hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-indigo-500/20"
+              className="flex items-center gap-2 brand-gradient text-white px-5 py-2.5 rounded-xl text-[16px] font-semibold hover:opacity-90 disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/20"
             >
               {status === 'loading' ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
               {status === 'loading' ? 'Ingesting…' : 'Ingest Source'}
@@ -278,7 +278,7 @@ export default function IngestSources() {
               onClick={handleExtract}
               disabled={extracting}
               title="Send every not-yet-processed source to the LLM and turn it into decisions, constraints and contradictions"
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[16px] font-semibold transition-all border ${dark ? 'border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10' : 'border-indigo-200 text-indigo-600 hover:bg-indigo-50'} disabled:opacity-50`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[16px] font-semibold transition-all border ${dark ? 'border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10' : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'} disabled:opacity-50`}
             >
               {extracting ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
               {extracting ? 'Extracting…' : 'Extract facts'}
@@ -286,7 +286,7 @@ export default function IngestSources() {
           </div>
 
           {extractMsg && (
-            <div className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-[15px] ${dark ? 'text-indigo-300 bg-indigo-500/10 border border-indigo-500/20' : 'text-indigo-700 bg-indigo-50 border border-indigo-200'}`}>
+            <div className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-[15px] ${dark ? 'text-emerald-300 bg-emerald-500/10 border border-emerald-500/20' : 'text-emerald-700 bg-emerald-50 border border-emerald-200'}`}>
               <Sparkles size={15} /> {extractMsg}
             </div>
           )}

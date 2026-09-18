@@ -37,15 +37,11 @@ import java.util.UUID;
 @Service
 public class SyncService {
 
-    private static final int MAX_TICKETS = 25;
     private static final int MAX_SUBTASKS = 25;
-    private static final int MAX_BRANCHES = 10;
     private static final int MAX_COMMITS_PER_BRANCH = 8;
     private static final int MAX_FILES_PER_COMMIT = 20;
     private static final int MAX_PATCH_CHARS_PER_FILE = 1500;
     private static final int MAX_RAWTEXT_CHARS = 12000;
-    private static final String JIRA_FIELDS =
-            "summary,description,status,updated,created,reporter,assignee,issuetype,priority,comment,subtasks,parent";
 
     private final InitiativeService initiativeService;
     private final IntegrationConnectionService connectionService;
@@ -71,44 +67,99 @@ public class SyncService {
 
     // --- Full sync --------------------------------------------------------------
 
+    /**
+     * Refreshes what is already attached, rather than discovering new items.
+     *
+     * <p>Sync re-fetches each ticket and commit the initiative already holds and updates it in
+     * place to its latest state (status, comments, description). It deliberately does NOT run a
+     * project-wide JQL search or a branch scan: those pulled in every ticket in the project,
+     * which is not what "sync the things I selected" should mean. New items are added
+     * explicitly through the Add-source flow, not by Sync.
+     */
     @Transactional
     public SyncResult sync(String initiativeId) {
         initiativeService.requireInitiative(initiativeId);
 
-        List<InitiativeConnection> bindings = initiativeService.connectionsFor(initiativeId);
-        List<Scope> scopes = new ArrayList<>();
-        if (bindings.isEmpty()) {
-            // No explicit bindings: fall back to every connection the tenant owns, whole scope.
-            for (IntegrationConnection c : connectionService.byProvider(IntegrationConnection.PROVIDER_JIRA)) {
-                scopes.add(new Scope(c, ""));
-            }
-            for (IntegrationConnection c : connectionService.byProvider(IntegrationConnection.PROVIDER_GITHUB)) {
-                scopes.add(new Scope(c, ""));
-            }
-        } else {
-            for (InitiativeConnection b : bindings) {
-                scopes.add(new Scope(connectionService.require(b.getConnectionId()), b.getScopeKey()));
-            }
-        }
+        List<IntegrationConnection> jiraConns = candidateConnections(initiativeId, IntegrationConnection.PROVIDER_JIRA);
+        List<IntegrationConnection> gitConns = candidateConnections(initiativeId, IntegrationConnection.PROVIDER_GITHUB);
 
-        int jira = 0, github = 0, synced = 0;
+        int jira = 0, github = 0;
         List<String> warnings = new ArrayList<>();
-        for (Scope s : scopes) {
+        for (Source s : sourceRepository.findByInitiativeId(initiativeId)) {
+            String ref = s.getExternalRef();
+            if (ref == null || ref.isBlank()) continue; // manual notes have nothing to refresh
             try {
-                if (s.connection.isJira()) {
-                    jira += importJira(initiativeId, s.connection, s.scopeKey);
-                } else if (s.connection.isGithub()) {
-                    github += importGithub(initiativeId, s.connection, s.scopeKey);
+                if ("ticket".equals(s.getType())) {
+                    if (refreshJiraSource(s, jiraConns)) jira++;
+                } else if ("commit".equals(s.getType())) {
+                    if (refreshCommitSource(s, gitConns)) github++;
                 }
-                synced++;
             } catch (Exception e) {
-                warnings.add(s.connection.getLabel() + ": " + rootMessage(e));
+                warnings.add(ref + ": " + rootMessage(e));
             }
         }
 
-        // Extract everything newly imported (and anything still pending) in one pass.
+        // Re-extract anything still pending (e.g. items attached without extraction yet).
         ExtractResult extraction = extractionService.extractInitiative(initiativeId);
-        return new SyncResult(synced, jira, github, warnings, extraction);
+        return new SyncResult(jira + github, jira, github, warnings, extraction);
+    }
+
+    /** The connections to try for a provider: those bound to the initiative, else all of that provider. */
+    private List<IntegrationConnection> candidateConnections(String initiativeId, String provider) {
+        List<IntegrationConnection> bound = new ArrayList<>();
+        for (InitiativeConnection b : initiativeService.connectionsFor(initiativeId)) {
+            IntegrationConnection c = connectionService.require(b.getConnectionId());
+            if (provider.equals(c.getProvider())) bound.add(c);
+        }
+        return bound.isEmpty() ? connectionService.byProvider(provider) : bound;
+    }
+
+    /** Re-fetches an attached ticket by key across candidate connections and updates it in place. */
+    private boolean refreshJiraSource(Source s, List<IntegrationConnection> conns) {
+        for (IntegrationConnection conn : conns) {
+            Optional<Object> found = jiraClient.findIssue(conn, s.getExternalRef());
+            if (found.isPresent()) {
+                return applyRefresh(s, normalizeJiraIssue(mapper.valueToTree(found.get())));
+            }
+        }
+        return false;
+    }
+
+    /** Re-fetches an attached commit by sha. Commits are immutable, so this is mostly a no-op. */
+    private boolean refreshCommitSource(Source s, List<IntegrationConnection> conns) {
+        for (IntegrationConnection conn : conns) {
+            try {
+                JsonNode commit = gitHubClient.getCommit(conn, s.getExternalRef());
+                if (commit != null && !commit.path("sha").asText("").isBlank()) {
+                    return applyRefresh(s, normalizeCommit(commit));
+                }
+            } catch (Exception ignore) {
+                // try the next candidate connection
+            }
+        }
+        return false;
+    }
+
+    /** Copies refreshed content onto an existing source; returns true if anything changed. */
+    private boolean applyRefresh(Source s, NormalizedSource ns) {
+        boolean changed = false;
+        if (ns.getTitle() != null && !ns.getTitle().isBlank() && !ns.getTitle().equals(s.getTitle())) {
+            s.setTitle(ns.getTitle()); changed = true;
+        }
+        if (ns.getRawText() != null && !ns.getRawText().equals(s.getRawText())) {
+            s.setRawText(ns.getRawText()); changed = true;
+        }
+        if (ns.getDocDate() != null && !ns.getDocDate().isBlank() && !ns.getDocDate().equals(s.getDocDate())) {
+            s.setDocDate(ns.getDocDate()); changed = true;
+        }
+        if (!java.util.Objects.equals(ns.getAuthor(), s.getAuthor())) {
+            s.setAuthor(ns.getAuthor()); changed = true;
+        }
+        if (!java.util.Objects.equals(ns.getParentRef(), s.getParentRef())) {
+            s.setParentRef(ns.getParentRef()); changed = true;
+        }
+        if (changed) sourceRepository.save(s);
+        return changed;
     }
 
     // --- Single-item imports (for the pick-and-import UI) ------------------------
@@ -186,24 +237,7 @@ public class SyncService {
         return new ImportResult(created.getId(), true, "Imported " + ref, extraction);
     }
 
-    // --- Jira import ------------------------------------------------------------
-
-    private int importJira(String initiativeId, IntegrationConnection connection, String scopeKey) {
-        // Jira's /search/jql rejects an unrestricted query ("Unbounded JQL not allowed"),
-        // so the whole-site fallback is bounded to recently updated issues.
-        String jql = scopeKey == null || scopeKey.isBlank()
-                ? "updated >= -90d ORDER BY updated DESC"
-                : "project = \"" + scopeKey + "\" ORDER BY updated DESC";
-        JsonNode result = mapper.valueToTree(jiraClient.search(connection, jql, JIRA_FIELDS));
-
-        JsonNode issues = result.path("issues");
-        int added = 0, seen = 0;
-        for (JsonNode issue : issues) {
-            if (seen++ >= MAX_TICKETS) break;
-            if (createIfNew(initiativeId, normalizeJiraIssue(issue)) != null) added++;
-        }
-        return added;
-    }
+    // --- Jira normalisation -----------------------------------------------------
 
     private NormalizedSource normalizeJiraIssue(JsonNode issue) {
         String key = issue.path("key").asText("");
@@ -246,23 +280,6 @@ public class SyncService {
     }
 
     // --- GitHub import ----------------------------------------------------------
-
-    private int importGithub(String initiativeId, IntegrationConnection connection, String scopeKey) {
-        JsonNode branches = mapper.valueToTree(gitHubClient.listBranches(connection));
-        int added = 0, seen = 0;
-        for (JsonNode b : branches) {
-            String name = b.path("name").asText("");
-            if (name.isBlank()) continue;
-            // scopeKey (when set) is a branch prefix/substring narrowing the repo.
-            if (scopeKey != null && !scopeKey.isBlank()
-                    && !name.toLowerCase().contains(scopeKey.toLowerCase())) {
-                continue;
-            }
-            if (seen++ >= MAX_BRANCHES) break;
-            added += importCommitsOnBranch(initiativeId, connection, name);
-        }
-        return added;
-    }
 
     private int importCommitsOnBranch(String initiativeId, IntegrationConnection connection, String branch) {
         JsonNode commits = gitHubClient.listCommits(connection, branch, MAX_COMMITS_PER_BRANCH);
@@ -401,8 +418,5 @@ public class SyncService {
         Throwable c = e;
         while (c.getCause() != null && c.getCause() != c) c = c.getCause();
         return c.getClass().getSimpleName() + ": " + c.getMessage();
-    }
-
-    private record Scope(IntegrationConnection connection, String scopeKey) {
     }
 }

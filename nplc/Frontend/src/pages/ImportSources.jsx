@@ -184,7 +184,7 @@ export default function ImportSources() {
               <input value={query} onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && search()}
                 placeholder={tab === 'JIRA' ? 'e.g. bulk update (blank = recent)' : 'e.g. feature/'}
-                className={`w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-indigo-500/30 ${inp}`} />
+                className={`w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-emerald-500/30 ${inp}`} />
             </div>
             <button onClick={search} disabled={loading || !connId}
               className="flex items-center gap-2 brand-gradient text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold hover:opacity-90 disabled:opacity-50 transition-all">
@@ -204,7 +204,7 @@ export default function ImportSources() {
                 const f = it.fields || {}
                 return (
                   <Row key={it.id || it.key} dark={dark}
-                    icon={<Ticket size={15} className="text-blue-400" />}
+                    icon={<Ticket size={15} className="text-emerald-400" />}
                     title={`${it.key} · ${f.summary || ''}`}
                     sub={`${f.issuetype?.name || ''}${f.status?.name ? ' · ' + f.status.name : ''}`}
                     busy={busyKey === it.key}

@@ -28,6 +28,16 @@ public class Initiative {
     @Column(nullable = false)
     private String name;
 
+    private String description;
+
+    // One of LOW / MEDIUM / HIGH, validated and defaulted to MEDIUM in InitiativeService -
+    // not a Java enum, to match how the rest of this codebase stores status-like fields as
+    // plain strings. Deliberately no field initializer: Jackson would apply it before
+    // reading the request body, making "priority absent" indistinguishable from "MEDIUM"
+    // during a partial update.
+    @Column(nullable = false)
+    private String priority;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }
