@@ -2,6 +2,8 @@ package com.hackathon.productmemory.repository;
 
 import com.hackathon.productmemory.entity.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -13,4 +15,7 @@ public interface EventRepository extends JpaRepository<Event, String> {
     List<Event> findByInitiativeIdAndEventType(String initiativeId, String eventType);
     List<Event> findByInitiativeIdAndSourceId(String initiativeId, String sourceId);
     void deleteByInitiativeId(String initiativeId);
+
+    @Query("SELECT e FROM Event e WHERE LOWER(e.summary) LIKE LOWER(CONCAT('%', :q, '%')) ORDER BY e.eventDate DESC")
+    List<Event> searchAcrossTenant(@Param("q") String q);
 }

@@ -179,7 +179,7 @@ export default function AskContext() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask anything about this product initiative…"
           disabled={loading}
-          className={`flex-1 border rounded-[7px] px-3.5 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:opacity-60 transition-colors ${inp}`}
+          className={`flex-1 border rounded-[7px] px-3.5 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-emerald-400 disabled:opacity-60 transition-colors ${inp}`}
         />
         <button
           type="submit"

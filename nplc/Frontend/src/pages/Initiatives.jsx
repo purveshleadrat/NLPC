@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { LoadingScreen } from '../App'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Trash2, Check, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
 import { getInitiativeConnections, getConnections, getSources, getEvents } from '../api/client'
@@ -134,7 +135,7 @@ export default function Initiatives() {
 
   const loading = initiativesLoading || loadingSummaries
 
-  const card = dark ? 'bg-white/[0.03] border border-white/[0.07] hover:border-indigo-400/40' : 'bg-white border border-gray-200 hover:border-indigo-300'
+  const card = dark ? 'bg-white/[0.03] border border-white/[0.07] hover:border-emerald-400/40' : 'bg-white border border-gray-200 hover:border-emerald-300'
   const title = dark ? 'text-gray-100' : 'text-gray-900'
   const muted = dark ? 'text-gray-500' : 'text-gray-400'
   const input = dark
@@ -172,7 +173,7 @@ export default function Initiatives() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name..."
-            className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-400 w-48 ${input}`}
+            className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-emerald-400 w-48 ${input}`}
           />
         </div>
 
@@ -209,12 +210,7 @@ export default function Initiatives() {
         </div>
       </div>
 
-      {loading && (
-        <div className={`flex items-center gap-2 py-20 justify-center ${muted}`}>
-          <Loader2 size={18} className="animate-spin" />
-          <span className="text-[13px]">Loading initiatives…</span>
-        </div>
-      )}
+      {loading && <LoadingScreen dark={dark} />}
 
       {!loading && processed.length === 0 && (
         <div className={`text-center py-20 border-2 border-dashed rounded-xl text-[13px] ${dark ? 'border-white/10 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
@@ -299,7 +295,7 @@ export default function Initiatives() {
                           if (e.key === 'Enter') commitRename(init.id)
                           if (e.key === 'Escape') setRenamingId(null)
                         }}
-                        className={`w-full font-bold text-[14.5px] tracking-[-0.2px] rounded px-1 -mx-1 outline-none ring-1 ring-blue-400 ${dark ? 'bg-white/[0.06] text-gray-100' : 'bg-white text-gray-900'}`}
+                        className={`w-full font-bold text-[14.5px] tracking-[-0.2px] rounded px-1 -mx-1 outline-none ring-1 ring-emerald-400 ${dark ? 'bg-white/[0.06] text-gray-100' : 'bg-white text-gray-900'}`}
                       />
                     ) : (
                       <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
