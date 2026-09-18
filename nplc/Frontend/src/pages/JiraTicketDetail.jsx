@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { searchJiraTickets, listGitHubBranches } from '../api/client'
-import { ArrowLeft, Loader2, RefreshCw, AlertTriangle, Search } from 'lucide-react'
+import { ArrowLeft, RefreshCw, AlertTriangle, Search } from 'lucide-react'
+import { LoadingScreen } from '../App'
+import { useTheme } from '../context/ThemeContext'
 
 const TABS    = ['Timeline', 'Scope', 'Ask', 'Brief', 'Add source', 'Add decision']
 const FILTERS = ['All', 'Decisions', 'Tickets', 'Commits', 'Questions', 'Requirements']
@@ -70,6 +72,7 @@ function filterMatch(item, f) {
 }
 
 export default function JiraTicketDetail() {
+  const { dark } = useTheme()
   const { key } = useParams()
   const navigate = useNavigate()
   const [issues, setIssues]         = useState([])
@@ -183,12 +186,7 @@ export default function JiraTicketDetail() {
               ))}
             </div>
 
-            {loading && (
-              <div className="flex items-center gap-2 text-gray-500 py-24 justify-center">
-                <Loader2 size={18} className="animate-spin" />
-                <span className="text-sm">Loading timeline…</span>
-              </div>
-            )}
+            {loading && <LoadingScreen dark={dark} />}
 
             {error && (
               <div className="flex items-start gap-2 bg-red-900/20 border border-red-500/30 text-red-400 rounded-xl px-4 py-3 text-sm mb-6">

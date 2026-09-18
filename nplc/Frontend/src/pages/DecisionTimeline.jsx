@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getEvents, getContradictions, getSources } from '../api/client'
 import { useInitiative } from '../context/InitiativeContext'
-import { Loader2, AlertTriangle, Search, GitCommit, Ticket, MessagesSquare, FileText } from 'lucide-react'
+import { AlertTriangle, Search, GitCommit, Ticket, MessagesSquare, FileText } from 'lucide-react'
+import { LoadingScreen } from '../App'
 import { useTheme } from '../context/ThemeContext'
 import { Badge } from '../components/ui/badge'
 
@@ -206,11 +207,7 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
         </div>
       )}
 
-      {loading && (
-        <div className={`w-full flex items-center justify-center min-h-[300px] gap-2 ${muted}`}>
-          <Loader2 size={18} className="animate-spin" /> <span className="text-[13px]">Loading timeline…</span>
-        </div>
-      )}
+      {loading && <LoadingScreen dark={dark} />}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 text-[13px] max-w-4xl">

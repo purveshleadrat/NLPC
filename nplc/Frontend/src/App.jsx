@@ -18,7 +18,6 @@ import AppTour, { shouldShowTour } from './components/AppTour'
 export function LoadingScreen({ dark, minHeight = '60vh' }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 select-none" style={{ minHeight }}>
-      <p className="loading-brand font-black tracking-tight" style={{ fontSize: 30, color: '#34d399' }}>NLPC</p>
       <p className="loading-sub" style={{ fontSize: 13, color: dark ? '#6b7280' : '#9ca3af', fontWeight: 500 }}>
         fetching &amp; setting up your data...
       </p>

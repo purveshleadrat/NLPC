@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getJiraProjects, searchJiraTickets, listGitHubBranches } from '../api/client'
-import { Loader2, AlertTriangle, Search, Star, ChevronDown, GitCommitHorizontal } from 'lucide-react'
+import { AlertTriangle, Search, Star, ChevronDown, GitCommitHorizontal } from 'lucide-react'
+import { LoadingScreen } from '../App'
+import { useTheme } from '../context/ThemeContext'
 
 const PROJECT_COLORS = [
   '#22c55e', '#3b82f6', '#a855f7', '#f97316',
@@ -12,6 +14,7 @@ const SORT_OPTIONS = ['Recently updated', 'Name (A–Z)', 'Most tickets', 'Most 
 const FILTERS = ['All', 'Has open questions', 'Recently changed', 'Pinned']
 
 export default function JiraTickets() {
+  const { dark } = useTheme()
   const navigate = useNavigate()
   const [projects, setProjects]     = useState([])
   const [ticketData, setTicketData] = useState({})  // { [key]: { total, openCount, hasQuestions, lastUpdated } }
@@ -182,12 +185,7 @@ export default function JiraTickets() {
         </div>
       )}
 
-      {loading && (
-        <div className="flex items-center gap-2 text-gray-400 py-20 justify-center">
-          <Loader2 size={20} className="animate-spin" />
-          <span className="text-sm">Loading initiatives…</span>
-        </div>
-      )}
+      {loading && <LoadingScreen dark={dark} />}
 
       {!loading && processed.length === 0 && (
         <div className="text-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl text-sm">

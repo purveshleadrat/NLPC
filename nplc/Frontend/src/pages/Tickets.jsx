@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { searchJiraTickets } from '../api/client'
-import { Loader2, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
+import { LoadingScreen } from '../App'
+import { useTheme } from '../context/ThemeContext'
 
 const STATUS_COLOR = {
   'To Do':       'bg-gray-100 text-gray-700',
@@ -9,6 +11,7 @@ const STATUS_COLOR = {
 }
 
 export default function Tickets() {
+  const { dark } = useTheme()
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -27,11 +30,7 @@ export default function Tickets() {
         <p className="text-gray-500 text-sm">Jira tickets linked to your product context.</p>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center py-16 text-gray-400">
-          <Loader2 size={24} className="animate-spin mr-2" /> Loading tickets…
-        </div>
-      )}
+      {loading && <LoadingScreen dark={dark} />}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
