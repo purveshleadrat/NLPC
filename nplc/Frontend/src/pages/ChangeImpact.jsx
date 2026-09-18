@@ -38,38 +38,38 @@ function ImpactGroup({ item, events, open, onToggle, dark }) {
   const divider = dark ? 'border-white/[0.05]' : 'border-gray-100'
   const summary = dark ? 'text-gray-200' : 'text-gray-700'
   const muted   = dark ? 'text-gray-500' : 'text-gray-400'
-  const badge   = dark ? 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25' : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+  const badge   = dark ? 'bg-sky-500/15 text-sky-400 border-sky-500/25' : 'bg-sky-50 text-sky-700 border-sky-200'
 
   const STATUS = dark
-    ? { CURRENT: 'bg-emerald-500/15 text-emerald-400', SUPERSEDED: 'bg-gray-500/15 text-gray-500 line-through', UNRESOLVED: 'bg-orange-500/15 text-orange-400' }
-    : { CURRENT: 'bg-green-100 text-green-700', SUPERSEDED: 'bg-gray-100 text-gray-400 line-through', UNRESOLVED: 'bg-orange-100 text-orange-700' }
+    ? { CURRENT: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25', SUPERSEDED: 'badge-superseded line-through', UNRESOLVED: 'badge-open' }
+    : { CURRENT: 'bg-emerald-50 text-emerald-700 border border-emerald-200', SUPERSEDED: 'badge-superseded line-through', UNRESOLVED: 'badge-open' }
 
   return (
-    <div className={`border rounded-2xl overflow-hidden ${card} ${dark ? 'border-white/[0.07]' : 'border-gray-200'}`}>
+    <div className={`border rounded-xl overflow-hidden ${card} ${dark ? 'border-white/[0.07]' : 'border-gray-200'}`}>
       <button
         onClick={onToggle}
-        className={`w-full flex items-center justify-between px-5 py-3.5 text-left transition-colors ${hdr}`}
+        className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors cursor-pointer ${hdr}`}
       >
-        <div className="flex items-center gap-3">
-          <span className={`text-[16.5px] font-semibold px-2.5 py-0.5 rounded-lg border font-mono ${badge}`}>{item}</span>
-          <span className={`text-[17px] ${muted}`}>{events.length} event{events.length !== 1 ? 's' : ''}</span>
+        <div className="flex items-center gap-2.5">
+          <span className={`text-[12px] font-medium px-2 py-0.5 rounded-[5px] border font-mono ${badge}`}>{item}</span>
+          <span className={`text-[12px] ${muted}`}>{events.length} event{events.length !== 1 ? 's' : ''}</span>
         </div>
         {open
-          ? <ChevronDown size={15} className={muted} />
-          : <ChevronRight size={15} className={muted} />}
+          ? <ChevronDown size={14} className={muted} />
+          : <ChevronRight size={14} className={muted} />}
       </button>
 
       {open && (
         <div className={`border-t divide-y ${divider}`}>
           {events.map((e) => (
-            <div key={e.id} className="px-5 py-3.5">
+            <div key={e.id} className="px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className={`text-[16.5px] font-semibold px-2 py-0.5 rounded-full ${STATUS[e.status] || (dark ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-600')}`}>
+                    <span className={`badge-prototype ${STATUS[e.status] || (dark ? 'bg-white/[0.08] text-gray-400' : 'bg-gray-100 text-gray-600')}`}>
                       {e.status}
                     </span>
-                    <span className={`text-[17px] ${muted}`}>{e.eventType.replace('_', ' ')}</span>
+                    <span className={`text-[12px] ${muted}`}>{e.eventType.replace('_', ' ')}</span>
                   </div>
                   <p className={`text-[16px] leading-relaxed ${summary}`}>{e.summary}</p>
                   {e.decidedBy && <p className={`text-[17px] mt-1 ${muted}`}>by {e.decidedBy}</p>}
@@ -120,7 +120,7 @@ export default function ChangeImpact() {
     : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl">
 
       {!loading && !error && (
         <div className="grid grid-cols-3 gap-4 mb-7">

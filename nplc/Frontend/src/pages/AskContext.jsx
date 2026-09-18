@@ -140,11 +140,11 @@ export default function AskContext() {
     : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
+    <div className="max-w-4xl flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
 
       {/* Example pills */}
-      <div className="flex flex-wrap gap-2 mb-4 flex-shrink-0">
-        <div className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide mr-1 ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
+      <div className="flex flex-wrap gap-1.5 mb-4 flex-shrink-0 items-center">
+        <div className={`flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide mr-1 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
           <Sparkles size={10} /> Try asking
         </div>
         {EXAMPLE_QUESTIONS.map((q) => (
@@ -152,7 +152,7 @@ export default function AskContext() {
             key={q}
             onClick={() => send(q)}
             disabled={loading}
-            className={`text-[16px] rounded-full px-3 py-1.5 transition-all ${exBtn}`}
+            className="btn-prototype-pill cursor-pointer disabled:opacity-40"
           >
             {q}
           </button>
@@ -160,7 +160,7 @@ export default function AskContext() {
       </div>
 
       {/* Messages */}
-      <div className={`flex-1 min-h-0 overflow-y-auto rounded-2xl p-5 space-y-5 ${msgArea}`}>
+      <div className={`flex-1 min-h-0 overflow-y-auto rounded-xl p-4 space-y-4 ${msgArea}`}>
         {messages.map((msg, i) => (
           <Message key={i} msg={msg} dark={dark} />
         ))}
@@ -179,14 +179,14 @@ export default function AskContext() {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask anything about this product initiative…"
           disabled={loading}
-          className={`flex-1 border rounded-2xl px-4 py-3 text-[16px] focus:outline-none focus:ring-2 disabled:opacity-60 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
+          className={`flex-1 border rounded-[7px] px-3.5 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:opacity-60 transition-colors ${inp}`}
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="brand-gradient text-white px-4 py-3 rounded-2xl hover:opacity-90 disabled:opacity-40 transition-all shadow-lg shadow-indigo-500/20"
+          className="btn-prototype-primary cursor-pointer disabled:opacity-40"
         >
-          <Send size={16} />
+          <Send size={13} />
         </button>
       </form>
     </div>

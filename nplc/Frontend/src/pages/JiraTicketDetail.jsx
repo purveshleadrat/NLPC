@@ -131,25 +131,21 @@ export default function JiraTicketDetail() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab
-                  ? 'bg-white/10 text-white border border-white/20'
-                  : 'text-gray-400 border border-[#30363d] hover:text-white hover:border-gray-500'
-              }`}
+              className={`cursor-pointer ${activeTab === tab ? 'btn-prototype-tab-active' : 'btn-prototype-tab'}`}
             >
               {tab}
             </button>
           ))}
           <button
             onClick={load}
-            className="ml-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-300 border border-[#30363d] hover:border-gray-500 transition-colors"
+            className="btn-prototype-tab flex items-center gap-1.5 cursor-pointer ml-1"
           >
-            <RefreshCw size={13} /> Sync
+            <RefreshCw size={11} /> Sync
           </button>
         </div>
       </div>
@@ -167,24 +163,20 @@ export default function JiraTicketDetail() {
             {/* Filter bar */}
             <div className="flex items-center gap-2 mb-6 flex-wrap">
               <div className="relative">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input
                   type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search timeline..."
-                  className="bg-[#161b22] border border-[#30363d] rounded-lg pl-7 pr-3 py-1.5 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-indigo-500 w-44"
+                  className="bg-[#161b22] border border-[#30363d] rounded-full pl-8 pr-3 py-1.5 text-[12px] text-gray-300 placeholder-gray-600 focus:outline-none focus:border-blue-500 w-44"
                 />
               </div>
               {FILTERS.map(f => (
                 <button
                   key={f}
                   onClick={() => setActiveFilter(f)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    activeFilter === f
-                      ? 'bg-white text-gray-900'
-                      : 'text-gray-400 border border-[#30363d] hover:border-gray-500 hover:text-white'
-                  }`}
+                  className={`cursor-pointer ${activeFilter === f ? 'btn-prototype-pill-active' : 'btn-prototype-pill'}`}
                 >
                   {f}
                 </button>
@@ -230,7 +222,7 @@ export default function JiraTicketDetail() {
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <span className="text-white font-semibold text-sm">{item.title}</span>
                           {item.status && (
-                            <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${STATUS_STYLE[item.status] ?? ''}`}>
+                            <span className="badge-prototype badge-decision">
                               {item.status}
                             </span>
                           )}
@@ -238,13 +230,10 @@ export default function JiraTicketDetail() {
                         {item.desc && (
                           <p className="text-gray-400 text-sm mb-3 leading-relaxed">{item.desc}</p>
                         )}
-                        <span
-                          className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full"
-                          style={{ background: ts.bg, border: `1px solid ${ts.border}`, color: ts.text }}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: ts.dot }} />
-                          {item.type}
-                          {item.label && <span className="opacity-60">{item.label}</span>}
+                        <span className="badge-source-tag">
+                          <span className="w-1.5 h-1.5 rounded-full inline-block mr-1 flex-shrink-0" style={{ background: ts.dot }} />
+                          <span className="font-medium text-gray-300 mr-1">{item.type}</span>
+                          {item.label && <span className="font-mono text-gray-400 text-[10.5px]">{item.label}</span>}
                         </span>
                       </div>
                     </div>

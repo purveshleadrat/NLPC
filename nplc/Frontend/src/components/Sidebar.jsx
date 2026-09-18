@@ -1,31 +1,23 @@
 import { NavLink } from 'react-router-dom'
 import {
-  Upload,
-  GitCommitHorizontal,
-  Zap,
-  MessageSquare,
-  FileText,
-  Ticket,
   Brain,
   Sparkles,
   Sun,
   Moon,
-  Plus,
   LogOut,
   Download,
+  Ticket,
   Settings as SettingsIcon,
+  Boxes,
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
-import { useInitiative } from '../context/InitiativeContext'
 import { useAuth } from '../context/AuthContext'
 
+// Timeline/Scope/Ask/Brief/Add-source now live as tabs and actions inside
+// InitiativeHeader on the initiative workspace itself, not as separate sidebar pages.
 const links = [
-  { to: '/', label: 'Ingest Sources', icon: Upload },
+  { to: '/initiatives', label: 'Initiatives', icon: Boxes },
   { to: '/import', label: 'Import Jira / Git', icon: Download },
-  { to: '/timeline', label: 'Decision Timeline', icon: GitCommitHorizontal },
-  { to: '/impact', label: 'Change Impact', icon: Zap },
-  { to: '/ask', label: 'Ask Context', icon: MessageSquare },
-  { to: '/brief', label: 'Resume Brief', icon: FileText },
   { to: '/jira', label: 'Jira Browser', icon: Ticket },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
@@ -35,15 +27,7 @@ const SIDEBAR_DARK = '#131320'
 
 export default function Sidebar() {
   const { dark, toggle } = useTheme()
-  const { initiatives, currentId, select, create } = useInitiative()
   const { tenant, logout } = useAuth()
-
-  async function newInitiative() {
-    const name = window.prompt('Name your initiative (e.g. "Bulk Update")')
-    if (name && name.trim()) {
-      try { await create(name.trim()) } catch (e) { alert(e?.response?.data?.message || e.message) }
-    }
-  }
 
   const bg          = dark ? SIDEBAR_DARK : '#ffffff'
   const borderColor = dark ? 'rgba(255,255,255,0.07)' : '#e5e7eb'
@@ -76,52 +60,18 @@ export default function Sidebar() {
         </div>
 
         <div
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
-          style={{ background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)' }}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+          style={{
+            background: dark ? 'rgba(56, 189, 248, 0.1)' : 'rgba(37, 99, 235, 0.08)',
+            borderColor: dark ? 'rgba(56, 189, 248, 0.25)' : 'rgba(37, 99, 235, 0.2)',
+          }}
         >
-          <Sparkles size={9} style={{ color: '#a5b4fc' }} />
-          <span className="text-[10px] font-semibold leading-none" style={{ color: '#a5b4fc' }}>
+          <Sparkles size={9} style={{ color: dark ? '#38bdf8' : '#2563eb' }} />
+          <span className="text-[10px] font-semibold leading-none" style={{ color: dark ? '#38bdf8' : '#2563eb' }}>
             Never Lose Product Context
           </span>
         </div>
       </div>
-
-      {/* ── Initiative switcher ── */}
-      <div className="px-3 pb-2">
-        <div className="text-[9.5px] font-bold uppercase tracking-[0.14em] mb-1.5 px-1" style={{ color: textMuted }}>
-          Initiative
-        </div>
-        <div className="flex items-center gap-1.5">
-          <select
-            value={currentId || ''}
-            onChange={(e) => select(e.target.value)}
-            className="flex-1 min-w-0 rounded-lg px-2 py-1.5 text-[12px] font-medium outline-none cursor-pointer"
-            style={{
-              background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-              border: `1px solid ${borderColor}`,
-              color: dark ? '#e5e7eb' : '#374151',
-            }}
-          >
-            {initiatives.length === 0 && <option value="">No initiatives yet</option>}
-            {initiatives.map((i) => (
-              <option key={i.id} value={i.id}>{i.name}</option>
-            ))}
-          </select>
-          <button
-            onClick={newInitiative}
-            title="New initiative"
-            className="rounded-lg p-1.5 flex-shrink-0 transition-colors"
-            style={{ background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', border: `1px solid ${borderColor}`, color: textMuted }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#a5b4fc' }}
-            onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Divider ── */}
-      <div style={{ height: 1, background: dividerBg, margin: '0 16px 8px' }} />
 
       {/* ── Nav links ── */}
       <nav className="flex-1 px-2 py-2 flex flex-col gap-0.5 overflow-y-auto">
@@ -130,26 +80,28 @@ export default function Sidebar() {
             {({ isActive }) => (
               <div
                 style={isActive ? {
-                  background: '#4f46e5',
-                  color: textActive,
-                  borderRadius: 10,
+                  background: dark ? '#1d293d' : '#eff6ff',
+                  color: dark ? '#93c5fd' : '#2563eb',
+                  border: dark ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid #bfdbfe',
+                  borderRadius: 7,
                 } : {
                   color: textMuted,
-                  borderRadius: 10,
+                  border: '1px solid transparent',
+                  borderRadius: 7,
                 }}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#e5e7eb' } }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'; e.currentTarget.style.color = dark ? '#e5e7eb' : '#111827' } }}
                 onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = textMuted } }}
-                className="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none transition-colors duration-150"
+                className="flex items-center gap-2.5 px-3 py-2 cursor-pointer select-none transition-colors duration-150 text-[12.5px] font-medium"
               >
                 <Icon
-                  size={15}
-                  style={{ color: isActive ? '#ffffff' : dark ? '#6b7280' : '#9ca3af', flexShrink: 0 }}
+                  size={14}
+                  style={{ color: isActive ? (dark ? '#93c5fd' : '#2563eb') : dark ? '#6b7280' : '#9ca3af', flexShrink: 0 }}
                 />
-                <span className="text-[13px] font-medium leading-none">{label}</span>
+                <span className="text-[12.5px] font-medium leading-none">{label}</span>
                 {isActive && (
                   <span
                     className="ml-auto rounded-full"
-                    style={{ width: 6, height: 6, background: 'rgba(255,255,255,0.5)', flexShrink: 0 }}
+                    style={{ width: 5, height: 5, background: dark ? '#60a5fa' : '#2563eb', flexShrink: 0 }}
                   />
                 )}
               </div>
@@ -164,13 +116,13 @@ export default function Sidebar() {
       {/* ── Footer ── */}
       <div className="px-3 py-3">
         <div
-          className="flex items-center justify-between px-2 py-2 rounded-xl"
-          style={{ background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${borderColor}` }}
+          className="flex items-center justify-between px-2.5 py-1.5 rounded-[7px]"
+          style={{ background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${borderColor}` }}
         >
           <div className="flex items-center gap-2">
-            <span className="relative flex" style={{ width: 8, height: 8 }}>
+            <span className="relative flex" style={{ width: 7, height: 7 }}>
               <span className="status-ping absolute inline-flex rounded-full" style={{ width: '100%', height: '100%', background: '#34d399', opacity: 0.5 }} />
-              <span className="relative inline-flex rounded-full" style={{ width: 8, height: 8, background: '#34d399' }} />
+              <span className="relative inline-flex rounded-full" style={{ width: 7, height: 7, background: '#34d399' }} />
             </span>
             <span className="text-[11px] font-medium" style={{ color: textMuted }}>
               API Live · :4000
@@ -178,25 +130,25 @@ export default function Sidebar() {
           </div>
           <button
             onClick={toggle}
-            className="rounded-md p-1.5 transition-all"
+            className="rounded-[6px] p-1.5 transition-all"
             style={{ color: textMuted }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#e5e7eb' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = textMuted }}
             title="Toggle theme"
           >
-            {dark ? <Sun size={13} /> : <Moon size={13} />}
+            {dark ? <Sun size={12} /> : <Moon size={12} />}
           </button>
         </div>
 
         <button
           onClick={logout}
-          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors"
-          style={{ background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: `1px solid ${borderColor}`, color: textMuted }}
+          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-[7px] px-2 py-1.5 text-[11px] font-medium transition-colors"
+          style={{ background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${borderColor}`, color: textMuted }}
           onMouseEnter={e => { e.currentTarget.style.color = '#f87171' }}
           onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
           title="Sign out"
         >
-          <LogOut size={12} />
+          <LogOut size={11} />
           {tenant?.tenantSlug ? `Sign out · ${tenant.tenantSlug}` : 'Sign out'}
         </button>
 

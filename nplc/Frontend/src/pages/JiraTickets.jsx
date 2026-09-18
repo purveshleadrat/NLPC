@@ -32,7 +32,13 @@ export default function JiraTickets() {
       setError(null)
       try {
         const [projRes, branchRes] = await Promise.all([getJiraProjects(), listGitHubBranches()])
-        const list = projRes.data?.values ?? []
+        // /jira/projects is tenant-scoped and fans out across connections: it returns an
+        // array with one entry per Jira connection (each shaped like { data: { values } }
+        // or { error }), not the raw single-site Jira response `{ values, total, ... }`.
+        const raw = projRes.data
+        const list = Array.isArray(raw)
+          ? raw.flatMap(entry => entry?.data?.values ?? entry?.values ?? [])
+          : raw?.values ?? []
         setBranches(branchRes.data ?? [])
         setProjects(list)
 
@@ -254,9 +260,7 @@ function FilterPill({ children, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
-        active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-      }`}
+      className={`cursor-pointer ${active ? 'btn-prototype-pill-active' : 'btn-prototype-pill'}`}
     >
       {children}
     </button>
@@ -265,7 +269,7 @@ function FilterPill({ children, active, onClick }) {
 
 function Chip({ children, icon }) {
   return (
-    <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-2.5 py-0.5 rounded-full font-medium">
+    <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[5px] border border-white/10 bg-white/[0.03] text-gray-400">
       {icon}{children}
     </span>
   )

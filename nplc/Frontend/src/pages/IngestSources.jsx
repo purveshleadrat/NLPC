@@ -153,7 +153,7 @@ export default function IngestSources() {
     : 'bg-gray-50 border-gray-200 hover:bg-indigo-50 hover:border-indigo-200'
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl">
 
       {/* Sample cards */}
       <div className="grid grid-cols-3 gap-3 mb-7">
