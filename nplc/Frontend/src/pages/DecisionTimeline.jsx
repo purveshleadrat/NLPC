@@ -7,10 +7,10 @@ import { Badge } from '../components/ui/badge'
 
 // Maps a Source's raw type to how it's tagged/labelled in the unified feed.
 const SOURCE_TAG = {
-  ticket:          { label: 'Jira',        icon: Ticket,          dot: '#6366f1' },
+  ticket:          { label: 'Jira',        icon: Ticket,          dot: '#10b981' },
   commit:          { label: 'Git',         icon: GitCommit,       dot: '#22c55e' },
   meeting_note:    { label: 'Meeting',     icon: MessagesSquare,  dot: '#ef4444' },
-  requirement_doc: { label: 'Requirement', icon: FileText,        dot: '#8b5cf6' },
+  requirement_doc: { label: 'Requirement', icon: FileText,        dot: '#14b8a6' },
   design_ref:      { label: 'Design',      icon: FileText,        dot: '#0ea5e9' },
   release_note:    { label: 'Release',     icon: FileText,        dot: '#f97316' },
   transcript:      { label: 'Transcript',  icon: MessagesSquare,  dot: '#eab308' },

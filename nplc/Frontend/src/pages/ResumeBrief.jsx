@@ -42,10 +42,10 @@ const SECTIONS = [
     key: 'risks',
     title: 'Risks & Dependencies',
     icon: AlertTriangle,
-    darkColor: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
-    lightColor: 'bg-violet-50 border-violet-200 text-violet-700',
+    darkColor: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+    lightColor: 'bg-emerald-50 border-emerald-200 text-emerald-700',
     bullet: AlertTriangle,
-    bulletColor: 'text-violet-400',
+    bulletColor: 'text-emerald-400',
   },
 ]
 
@@ -136,13 +136,13 @@ export default function ResumeBrief() {
         <div className="space-y-4">
 
           {/* Hero header */}
-          <div className="brand-gradient rounded-2xl px-6 py-6 shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+          <div className="brand-gradient rounded-2xl px-6 py-6 shadow-xl shadow-emerald-500/20 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10"
               style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 0%, transparent 60%)' }} />
             <div className="relative">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={12} className="text-indigo-200" />
-                <span className="text-[16px] font-bold uppercase tracking-[0.15em] text-indigo-200">
+                <Sparkles size={12} className="text-emerald-200" />
+                <span className="text-[16px] font-bold uppercase tracking-[0.15em] text-emerald-200">
                   Resume Brief · {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
               </div>
@@ -150,7 +150,7 @@ export default function ResumeBrief() {
                 {brief.initiativeTitle || 'Product Initiative'}
               </h2>
               {brief.overview && (
-                <p className="text-[16px] text-indigo-100 mt-2 leading-relaxed max-w-xl">{brief.overview}</p>
+                <p className="text-[16px] text-emerald-100 mt-2 leading-relaxed max-w-xl">{brief.overview}</p>
               )}
             </div>
           </div>
@@ -165,11 +165,11 @@ export default function ResumeBrief() {
           {/* Recommended next step */}
           {brief.recommendedNextStep && (
             <div className={`rounded-2xl px-6 py-5 border ${dark ? 'glass-dark border-white/[0.07]' : 'glass-light shadow-sm border-gray-200'}`}>
-              <div className={`text-[16px] font-bold uppercase tracking-[0.12em] mb-2 ${dark ? 'text-indigo-400' : 'text-indigo-500'}`}>
+              <div className={`text-[16px] font-bold uppercase tracking-[0.12em] mb-2 ${dark ? 'text-emerald-400' : 'text-emerald-500'}`}>
                 Recommended First Action
               </div>
               <div className="flex items-start gap-3">
-                <ArrowRight size={15} className={`mt-0.5 flex-shrink-0 ${dark ? 'text-indigo-400' : 'text-indigo-500'}`} />
+                <ArrowRight size={15} className={`mt-0.5 flex-shrink-0 ${dark ? 'text-emerald-400' : 'text-emerald-500'}`} />
                 <p className={`text-[16px] leading-relaxed font-medium ${dark ? 'text-gray-200' : 'text-gray-700'}`}>
                   {brief.recommendedNextStep}
                 </p>
