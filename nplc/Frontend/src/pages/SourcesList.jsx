@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Loader2, Trash2, FileText, Ticket, GitCommitHorizontal, AlertTriangle, Boxes, Unlink,
+  Trash2, FileText, Ticket, GitCommitHorizontal, AlertTriangle, Boxes, Unlink,
 } from 'lucide-react'
+import { LoadingScreen } from '../App'
 import {
   getSources, deleteSource, getInitiativeConnections, getConnections, unbindConnection,
 } from '../api/client'
@@ -73,13 +74,7 @@ export default function SourcesList({ refreshTick = 0 }) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className={`flex items-center gap-2 py-16 justify-center ${muted}`}>
-        <Loader2 size={18} className="animate-spin" /> Loading sources…
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen dark={dark} />
 
   // Resolve each binding to its connection so we can label the source.
   const connected = bindings.map((b) => {

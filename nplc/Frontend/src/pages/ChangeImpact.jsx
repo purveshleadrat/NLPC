@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getEvents } from '../api/client'
 import { useInitiative } from '../context/InitiativeContext'
-import { Loader2, Zap, ChevronDown, ChevronRight, TrendingUp, Activity, RotateCcw } from 'lucide-react'
+import { Zap, ChevronDown, ChevronRight, TrendingUp, Activity, RotateCcw } from 'lucide-react'
+import { LoadingScreen } from '../App'
 import { useTheme } from '../context/ThemeContext'
 
 function groupByAffected(events) {
@@ -140,11 +141,7 @@ export default function ChangeImpact({ refreshTick = 0 }) {
         />
       </div>
 
-      {loading && (
-        <div className={`flex items-center justify-center py-20 gap-2 ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
-          <Loader2 size={20} className="animate-spin" /> Loading impact map…
-        </div>
-      )}
+      {loading && <LoadingScreen dark={dark} />}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl px-4 py-3 text-[16px]">
