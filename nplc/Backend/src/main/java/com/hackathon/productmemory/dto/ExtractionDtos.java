@@ -27,6 +27,7 @@ public final class ExtractionDtos {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record LlmEvent(
+            Integer sourceIndex,       // which of the batch's SOURCES (0-based) this came from
             String eventType,          // DECISION|PROPOSAL|CHANGE|ASSUMPTION|DEPENDENCY|OPEN_QUESTION
             String summary,
             String decidedBy,          // null unless an owner is explicitly evidenced
