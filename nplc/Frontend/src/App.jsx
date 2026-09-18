@@ -77,7 +77,7 @@ function Shell() {
           <Route path="/initiatives" element={<Initiatives />} />
           <Route path="/initiatives/:id" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
           <Route path="/search" element={<GlobalSearch />} />
-          <Route path="/settings" element={<RequireInitiative><Settings /></RequireInitiative>} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/sign-in" element={<Navigate to="/initiatives" replace />} />
           <Route path="/sign-up" element={<Navigate to="/initiatives" replace />} />
           <Route path="*" element={<Navigate to="/initiatives" replace />} />
