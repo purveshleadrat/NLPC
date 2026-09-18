@@ -91,6 +91,9 @@ export const getContradictions = (initiativeId) =>
 // --- Extraction (LLM: raw sources -> facts) -----------------------------------
 export const extractFacts = (initiativeId) => api.post(`/initiatives/${initiativeId}/extract`)
 
+// --- Global Search ------------------------------------------------------------
+export const globalSearch = (q) => api.get('/search', { params: { q } })
+
 // --- Ask (LLM answering) ------------------------------------------------------
 export const askQuestion = (initiativeId, question) =>
   api.post(`/initiatives/${initiativeId}/ask`, { question })
