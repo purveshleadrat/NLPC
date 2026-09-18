@@ -162,7 +162,7 @@ function SendMailSheet({ onClose }) {
   )
 }
 
-export default function InitiativeHeader({ activeTab, onTabChange }) {
+export default function InitiativeHeader({ activeTab, onTabChange, onChanged }) {
   const { dark } = useTheme()
   const { current, currentId } = useInitiative()
   const [scopeLabel, setScopeLabel] = useState(null)
@@ -211,8 +211,9 @@ export default function InitiativeHeader({ activeTab, onTabChange }) {
       const parts = []
       if (r.jiraSourcesAdded) parts.push(`${r.jiraSourcesAdded} Jira`)
       if (r.githubSourcesAdded) parts.push(`${r.githubSourcesAdded} GitHub`)
-      setSyncMsg(parts.length ? `Synced: ${parts.join(' + ')}` : 'Synced — no new sources')
+      setSyncMsg(parts.length ? `Synced: ${parts.join(' + ')} refreshed` : 'Synced — no changes')
       loadSummary()
+      onChanged?.()
     } catch (err) {
       setSyncMsg(err?.response?.data?.message || err.message || 'Sync failed')
     } finally {
@@ -282,10 +283,16 @@ export default function InitiativeHeader({ activeTab, onTabChange }) {
       )}
 
       {showAddDecision && (
-        <AddDecisionSheet onClose={() => setShowAddDecision(false)} onAdded={loadSummary} />
+        <AddDecisionSheet
+          onClose={() => setShowAddDecision(false)}
+          onAdded={() => { loadSummary(); onChanged?.() }}
+        />
       )}
       {showAddSource && (
-        <AddSourceSheet onClose={() => setShowAddSource(false)} onAdded={loadSummary} />
+        <AddSourceSheet
+          onClose={() => setShowAddSource(false)}
+          onAdded={() => { loadSummary(); onChanged?.(); onTabChange('timeline') }}
+        />
       )}
       {showSendMail && (
         <SendMailSheet onClose={() => setShowSendMail(false)} />

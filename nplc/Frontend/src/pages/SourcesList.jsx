@@ -14,7 +14,7 @@ function typeIcon(type) {
   return FileText
 }
 
-export default function SourcesList() {
+export default function SourcesList({ refreshTick = 0 }) {
   const { dark } = useTheme()
   const { currentId } = useInitiative()
   const [sources, setSources] = useState([])
@@ -43,7 +43,7 @@ export default function SourcesList() {
       })
       .catch((e) => setError(e?.response?.data?.message || e.message))
       .finally(() => setLoading(false))
-  }, [currentId])
+  }, [currentId, refreshTick])
 
   useEffect(() => { load() }, [load])
 
