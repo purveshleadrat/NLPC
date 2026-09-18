@@ -2,11 +2,15 @@ import { useState, useEffect, useMemo } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useInitiative } from '../context/InitiativeContext'
 import { getConnections, getJiraProjects, bindConnection } from '../api/client'
+
 import SideSheet from './SideSheet'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 import PrioritySelect from './PrioritySelect'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from './ui/select'
 
 // Jira/GitHub fields only ever show up if the tenant already has a matching connection
 // configured in Settings - there is nothing to pick from otherwise, and showing an
@@ -66,7 +70,6 @@ export default function NewInitiativeModal({ onClose }) {
   }, [jiraConnectionId])
 
   const label = 'block text-[11px] font-semibold uppercase tracking-wide mb-1.5 text-muted-foreground'
-  const selectCls = 'w-full rounded-[9px] border border-input bg-background px-3 py-2 text-[13px] text-foreground mb-2 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30'
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -127,29 +130,33 @@ export default function NewInitiativeModal({ onClose }) {
             <div>
               <label className={label}>Jira project</label>
               {jiraConnections.length > 1 && (
-                <select
-                  value={jiraConnectionId}
-                  onChange={e => setJiraConnectionId(e.target.value)}
-                  className={selectCls}
-                >
-                  <option value="">Select a Jira connection…</option>
-                  {jiraConnections.map(c => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
-                  ))}
-                </select>
+                <Select value={jiraConnectionId} onValueChange={setJiraConnectionId}>
+                  <SelectTrigger className="mb-2">
+                    <SelectValue placeholder="Select a Jira connection…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jiraConnections.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
               <div className="relative mt-2">
-                <select
+                <Select
                   value={jiraProjectKey}
-                  onChange={e => setJiraProjectKey(e.target.value)}
+                  onValueChange={setJiraProjectKey}
                   disabled={!jiraConnectionId || jiraProjectsLoading}
-                  className={selectCls}
                 >
-                  <option value="">No Jira project (optional)</option>
-                  {jiraProjects.map(p => (
-                    <option key={p.key} value={p.key}>{p.name} ({p.key})</option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No Jira project (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No Jira project (optional)</SelectItem>
+                    {jiraProjects.map(p => (
+                      <SelectItem key={p.key} value={p.key}>{p.name} ({p.key})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {jiraProjectsLoading && (
                   <Loader2 size={12} className="animate-spin absolute right-8 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 )}
@@ -160,16 +167,17 @@ export default function NewInitiativeModal({ onClose }) {
           {githubConnections.length > 0 && (
             <div className="space-y-2">
               <label className={label}>GitHub repo</label>
-              <select
-                value={githubConnectionId}
-                onChange={e => setGithubConnectionId(e.target.value)}
-                className={selectCls}
-              >
-                <option value="">No repo (optional)</option>
-                {githubConnections.map(c => (
-                  <option key={c.id} value={c.id}>{c.label} ({c.accountId}/{c.repo})</option>
-                ))}
-              </select>
+              <Select value={githubConnectionId} onValueChange={setGithubConnectionId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No repo (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No repo (optional)</SelectItem>
+                  {githubConnections.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.label} ({c.accountId}/{c.repo})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {githubConnectionId && (
                 <Input
                   value={branchPrefix}
