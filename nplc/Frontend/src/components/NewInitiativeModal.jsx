@@ -127,10 +127,13 @@ export default function NewInitiativeModal({ onClose }) {
               <SelectContent>
                 {PRIORITIES.map(p => (
                   <SelectItem key={p.value} value={p.value}>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ background: p.dot }} />
-                      {p.label}
-                    </span>
+                    <span
+                      style={{
+                        display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                        background: p.dot, marginRight: 8, verticalAlign: 'middle',
+                      }}
+                    />
+                    {p.label}
                   </SelectItem>
                 ))}
               </SelectContent>
