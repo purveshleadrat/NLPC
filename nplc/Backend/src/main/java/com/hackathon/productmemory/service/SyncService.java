@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -37,13 +38,14 @@ import java.util.UUID;
 public class SyncService {
 
     private static final int MAX_TICKETS = 25;
+    private static final int MAX_SUBTASKS = 25;
     private static final int MAX_BRANCHES = 10;
     private static final int MAX_COMMITS_PER_BRANCH = 8;
     private static final int MAX_FILES_PER_COMMIT = 20;
     private static final int MAX_PATCH_CHARS_PER_FILE = 1500;
     private static final int MAX_RAWTEXT_CHARS = 12000;
     private static final String JIRA_FIELDS =
-            "summary,description,status,updated,created,reporter,assignee,issuetype,priority,comment";
+            "summary,description,status,updated,created,reporter,assignee,issuetype,priority,comment,subtasks,parent";
 
     private final InitiativeService initiativeService;
     private final IntegrationConnectionService connectionService;
@@ -119,8 +121,41 @@ public class SyncService {
                 jiraClient.findIssue(connection, key)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "no ticket " + key)));
 
+        // The parent ticket first, then each of its subtasks as their own child sources.
         Source created = createIfNew(initiativeId, normalizeJiraIssue(issue));
-        return finishImport(initiativeId, created, key);
+        int subtasks = importSubtasks(initiativeId, connection, issue);
+
+        if (created == null && subtasks == 0) {
+            return new ImportResult(null, false, key + " was already imported", null);
+        }
+        ExtractResult extraction = extractionService.extractInitiative(initiativeId);
+        String message = "Imported " + key
+                + (subtasks > 0 ? " + " + subtasks + " subtask(s)" : "");
+        return new ImportResult(created == null ? null : created.getId(), true, message, extraction);
+    }
+
+    /**
+     * Pulls a parent issue's subtasks in as their own sources, each fetched fully (subtasks
+     * embedded in the parent are only stubs) and linked back via parentRef. Bounded by
+     * {@link #MAX_SUBTASKS}, deduped by key, and never fetches one already imported.
+     */
+    private int importSubtasks(String initiativeId, IntegrationConnection connection, JsonNode parentIssue) {
+        JsonNode subtasks = parentIssue.path("fields").path("subtasks");
+        if (!subtasks.isArray() || subtasks.isEmpty()) return 0;
+
+        int added = 0, seen = 0;
+        for (JsonNode sub : subtasks) {
+            if (seen++ >= MAX_SUBTASKS) break;
+            String subKey = sub.path("key").asText("");
+            if (subKey.isBlank()) continue;
+            // Skip the extra fetch if we already hold this subtask.
+            if (!sourceRepository.findByInitiativeIdAndExternalRef(initiativeId, subKey).isEmpty()) continue;
+
+            Optional<Object> full = jiraClient.findIssue(connection, subKey);
+            if (full.isEmpty()) continue;
+            if (createIfNew(initiativeId, normalizeJiraIssue(mapper.valueToTree(full.get()))) != null) added++;
+        }
+        return added;
     }
 
     @Transactional
@@ -154,8 +189,10 @@ public class SyncService {
     // --- Jira import ------------------------------------------------------------
 
     private int importJira(String initiativeId, IntegrationConnection connection, String scopeKey) {
+        // Jira's /search/jql rejects an unrestricted query ("Unbounded JQL not allowed"),
+        // so the whole-site fallback is bounded to recently updated issues.
         String jql = scopeKey == null || scopeKey.isBlank()
-                ? "ORDER BY updated DESC"
+                ? "updated >= -90d ORDER BY updated DESC"
                 : "project = \"" + scopeKey + "\" ORDER BY updated DESC";
         JsonNode result = mapper.valueToTree(jiraClient.search(connection, jql, JIRA_FIELDS));
 
@@ -178,6 +215,7 @@ public class SyncService {
         String reporter = f.path("reporter").path("displayName").asText(
                 f.path("assignee").path("displayName").asText(null));
         String updated = f.path("updated").asText(f.path("created").asText(""));
+        String parentKey = f.path("parent").path("key").asText("");
 
         StringBuilder body = new StringBuilder();
         body.append("Jira ").append(key).append(" — ").append(summary).append('\n');
@@ -203,6 +241,7 @@ public class SyncService {
         ns.setDocDate(datePart(updated));
         ns.setAuthor(reporter);
         ns.setExternalRef(key.isBlank() ? null : key);
+        ns.setParentRef(parentKey.isBlank() ? null : parentKey);
         return ns;
     }
 
@@ -304,6 +343,7 @@ public class SyncService {
                 ? Instant.now().toString().substring(0, 10) : ns.getDocDate());
         s.setAuthor(ns.getAuthor());
         s.setExternalRef(ns.getExternalRef());
+        s.setParentRef(ns.getParentRef());
         s.setCreatedAt(Instant.now());
         return sourceRepository.save(s);
     }

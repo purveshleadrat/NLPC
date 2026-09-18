@@ -2,9 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Initiatives from './pages/Initiatives'
 import InitiativeWorkspace from './pages/InitiativeWorkspace'
-import JiraTickets from './pages/JiraTickets'
-import JiraTicketDetail from './pages/JiraTicketDetail'
-import ImportSources from './pages/ImportSources'
+import GlobalSearch from './pages/GlobalSearch'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
@@ -54,12 +52,10 @@ function Shell() {
       <Sidebar />
       <main className="ml-56 flex-1 p-8 overflow-y-auto">
         <Routes>
-          <Route path="/initiatives" element={<Initiatives />} />
-          <Route path="/" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
-          <Route path="/import" element={<RequireInitiative><ImportSources /></RequireInitiative>} />
+          <Route path="/" element={<Initiatives />} />
+          <Route path="/workspace" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
+          <Route path="/search" element={<GlobalSearch />} />
           <Route path="/settings" element={<RequireInitiative><Settings /></RequireInitiative>} />
-          <Route path="/jira" element={<JiraTickets />} />
-          <Route path="/jira/:key" element={<JiraTicketDetail />} />
         </Routes>
       </main>
     </div>

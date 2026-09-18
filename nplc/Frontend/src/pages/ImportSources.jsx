@@ -17,6 +17,23 @@ function pick(list, connectionId) {
   return arr.find((e) => e.connectionId === connectionId) || arr[0] || null
 }
 
+// A Jira issue key like PRE-9514: project code, a hyphen, then a number.
+const JIRA_KEY = /^[A-Za-z][A-Za-z0-9]*-\d+$/
+
+// Build JQL from the search box so it handles both a text search and a ticket key.
+// `text ~` searches summary/description/comments but never the key, so typing a key
+// alone would find nothing - detect that shape and query by key as well. Empty search
+// needs a bounded restriction: Jira's /search/jql rejects an unrestricted "ORDER BY".
+function buildJiraJql(raw) {
+  const q = (raw || '').trim()
+  if (!q) return 'updated >= -90d ORDER BY updated DESC'
+  const text = q.replace(/"/g, '\\"')
+  if (JIRA_KEY.test(q)) {
+    return `key = "${q.toUpperCase()}" OR text ~ "${text}" ORDER BY updated DESC`
+  }
+  return `text ~ "${text}" ORDER BY updated DESC`
+}
+
 export default function ImportSources() {
   const { dark } = useTheme()
   const { currentId } = useInitiative()
@@ -53,8 +70,7 @@ export default function ImportSources() {
     if (!connId) return
     setLoading(true); setError(null); setItems([])
     try {
-      const jql = query.trim() ? `text ~ "${query.trim()}" ORDER BY updated DESC` : 'ORDER BY updated DESC'
-      const res = await searchJiraTickets(jql, connId)
+      const res = await searchJiraTickets(buildJiraJql(query), connId)
       const entry = pick(res.data, connId)
       if (entry?.error) throw new Error(entry.error)
       setItems(entry?.data?.issues || [])

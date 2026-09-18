@@ -31,6 +31,7 @@ public class IntegrationConnection {
 
     public static final String PROVIDER_JIRA = "JIRA";
     public static final String PROVIDER_GITHUB = "GITHUB";
+    public static final String PROVIDER_SMTP = "SMTP";
 
     public static final String STATUS_UNVERIFIED = "UNVERIFIED";
     public static final String STATUS_OK = "OK";
@@ -87,6 +88,21 @@ public class IntegrationConnection {
     @Transient
     public boolean isGithub() {
         return PROVIDER_GITHUB.equals(provider);
+    }
+
+    @Transient
+    public boolean isSmtp() {
+        return PROVIDER_SMTP.equals(provider);
+    }
+
+    /** SMTP stores its port in the otherwise-unused repo column; default 587 (STARTTLS). */
+    @Transient
+    public int smtpPort() {
+        try {
+            return Integer.parseInt(repo.trim());
+        } catch (NumberFormatException e) {
+            return 587;
+        }
     }
 
     /** "owner/repo", the form GitHub's REST paths and ticket_branch_links both use. */

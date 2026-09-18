@@ -76,6 +76,7 @@ export const getSources    = (initiativeId, type) =>
   api.get('/sources', { params: { initiativeId, ...(type ? { type } : {}) } })
 export const ingestSource  = (initiativeId, data) =>
   api.post('/sources', data, { params: { initiativeId } })
+export const deleteSource  = (id) => api.delete(`/sources/${id}`)
 
 // --- Events / Timeline --------------------------------------------------------
 export const getEvents = (initiativeId, params = {}) =>
@@ -103,6 +104,10 @@ export const getResumeBrief = (initiativeId) => api.get(`/initiatives/${initiati
 // --- Decisions (append + supersede/resolve) -----------------------------------
 export const addDecision = (initiativeId, data) =>
   api.post(`/initiatives/${initiativeId}/decisions`, data)
+
+// --- Mail (SMTP: AI-written progress / release-note email) --------------------
+export const sendInitiativeMail = (initiativeId, to) =>
+  api.post(`/initiatives/${initiativeId}/send-mail`, { to })
 
 // --- Jira (tenant-scoped) -----------------------------------------------------
 export const getJiraProjects = (connectionId) =>

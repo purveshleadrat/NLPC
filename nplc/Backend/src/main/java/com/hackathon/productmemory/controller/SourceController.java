@@ -32,4 +32,11 @@ public class SourceController {
                 ? sourceService.findByInitiative(initiativeId)
                 : sourceService.findByInitiativeAndType(initiativeId, type);
     }
+
+    // DELETE /sources/{id} - removes the source and everything the extractor derived from it.
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable String id) {
+        sourceService.delete(id);
+    }
 }

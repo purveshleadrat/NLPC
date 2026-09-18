@@ -5,20 +5,19 @@ import {
   Sun,
   Moon,
   LogOut,
-  Download,
-  Ticket,
+  Search as SearchIcon,
   Settings as SettingsIcon,
   Boxes,
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
-// Timeline/Scope/Ask/Brief/Add-source now live as tabs and actions inside
-// InitiativeHeader on the initiative workspace itself, not as separate sidebar pages.
+// Everything a single initiative needs - Timeline/Scope/Ask/Brief, plus adding sources
+// from Jira/GitHub - now lives inside the initiative workspace itself. The sidebar is just
+// the three top-level destinations.
 const links = [
-  { to: '/initiatives', label: 'Initiatives', icon: Boxes },
-  { to: '/import', label: 'Import Jira / Git', icon: Download },
-  { to: '/jira', label: 'Jira Browser', icon: Ticket },
+  { to: '/', label: 'Initiatives', icon: Boxes },
+  { to: '/search', label: 'Global Search', icon: SearchIcon },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
 

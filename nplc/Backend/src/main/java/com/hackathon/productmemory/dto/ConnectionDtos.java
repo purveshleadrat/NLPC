@@ -15,12 +15,16 @@ public final class ConnectionDtos {
      * For Jira it is the API token; for GitHub the personal access token.
      */
     public record CreateConnectionRequest(
-            @NotBlank @Pattern(regexp = "JIRA|GITHUB", message = "provider must be JIRA or GITHUB")
+            @NotBlank @Pattern(regexp = "JIRA|GITHUB|SMTP", message = "provider must be JIRA, GITHUB or SMTP")
             String provider,
             @NotBlank String label,
+            // Jira/GitHub: the API base URL. SMTP: the mail server host (e.g. smtp.gmail.com).
             @NotBlank String baseUrl,
+            // Jira: login email. GitHub: owner/org. SMTP: the From address / login.
             @NotBlank String accountId,
             String repo,
+            // SMTP only: the server port (587 STARTTLS by default, 465 for SSL).
+            Integer port,
             @NotBlank String secret) {
     }
 
