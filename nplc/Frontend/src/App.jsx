@@ -9,6 +9,7 @@ import Integrations from './pages/Integrations'
 import Login from './pages/Login'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { InitiativeProvider, useInitiative } from './context/InitiativeContext'
 import { FolderPlus, Menu } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -155,10 +156,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   )
 }

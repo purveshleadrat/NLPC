@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Eye, Trash2, Check, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
+import { useLanguage } from '../context/LanguageContext'
 import { getInitiativeConnections, getConnections, getSources, getEvents } from '../api/client'
 import NewInitiativeModal from '../components/NewInitiativeModal'
 import EditInitiativeSheet from '../components/EditInitiativeSheet'
@@ -15,13 +16,28 @@ const PRIORITY_META = {
   LOW: { label: 'Low', dot: '#60a5fa', text: 'text-blue-400' },
 }
 
-const SORT_OPTIONS = ['Recently updated', 'Name (A–Z)', 'Most tickets']
-const FILTERS = ['All', 'Recently changed', 'Pinned']
 const PINNED_KEY = 'nplc_initiative_pinned'
 
 export default function Initiatives() {
   const { dark } = useTheme()
+  const { t } = useLanguage()
   const navigate = useNavigate()
+
+  // Internal sort/filter values stay as English keys so logic comparisons always work regardless of language
+  const SORT_KEYS = ['Recently updated', 'Name (A–Z)', 'Most tickets']
+  const FILTER_KEYS = ['All', 'Recently changed', 'Pinned']
+
+  const SORT_LABEL = {
+    'Recently updated': t('initiatives.sortRecent'),
+    'Name (A–Z)': t('initiatives.sortName'),
+    'Most tickets': t('initiatives.sortTickets'),
+  }
+  const FILTER_LABEL = {
+    'All': t('initiatives.filterAll'),
+    'Recently changed': t('initiatives.filterRecent'),
+    'Pinned': t('initiatives.filterPinned'),
+  }
+
   const { initiatives, loading: initiativesLoading, select, remove } = useInitiative()
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [summaries, setSummaries] = useState({}) // { [id]: { scopeLabel, ticketCount, commitCount, openCount, lastUpdated } }
@@ -132,22 +148,21 @@ export default function Initiatives() {
     <div>
       <div className="mb-2 flex items-start justify-between">
         <div>
-          <h2 className={`text-[18px] font-bold tracking-[-0.3px] ${title}`}>Initiatives</h2>
-          <p className={`text-[12px] ${muted}`}>{initiatives.length} initiatives</p>
+          <h2 className={`text-[18px] font-bold tracking-[-0.3px] ${title}`}>{t('initiatives.title')}</h2>
+          <p className={`text-[12px] ${muted}`}>{t('initiatives.count', { n: initiatives.length })}</p>
         </div>
         <button
           onClick={() => setShowNewModal(true)}
           className="btn-prototype-primary cursor-pointer"
         >
-          <Plus size={12} /> New initiative
+          <Plus size={12} /> {t('initiatives.new')}
         </button>
       </div>
 
       <div className="mb-4 mt-5">
-        <h3 className={`text-[19px] font-bold mb-[3px] tracking-[-0.3px] ${title}`}>All initiatives</h3>
+        <h3 className={`text-[19px] font-bold mb-[3px] tracking-[-0.3px] ${title}`}>{t('initiatives.allTitle')}</h3>
         <p className={`text-[13.5px] max-w-[66ch] ${muted}`}>
-          Search, filter and sort — built to stay usable whether your team owns three initiatives or
-          three hundred. Click one to open its memory.
+          {t('initiatives.subtitleDesc')}
         </p>
       </div>
 
@@ -158,18 +173,18 @@ export default function Initiatives() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name..."
+            placeholder={t('initiatives.searchPlaceholder')}
             className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-emerald-400 w-48 ${input}`}
           />
         </div>
 
-        {FILTERS.map(f => (
+        {FILTER_KEYS.map(fk => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`cursor-pointer ${filter === f ? 'btn-prototype-pill-active' : 'btn-prototype-pill'}`}
+            key={fk}
+            onClick={() => setFilter(fk)}
+            className={`cursor-pointer ${filter === fk ? 'btn-prototype-pill-active' : 'btn-prototype-pill'}`}
           >
-            {f === 'Pinned' ? <><Star size={10} className="inline mr-1" />{f}</> : f}
+            {fk === 'Pinned' ? <><Star size={10} className="inline mr-1" />{FILTER_LABEL[fk]}</> : FILTER_LABEL[fk]}
           </button>
         ))}
 
@@ -178,17 +193,17 @@ export default function Initiatives() {
             onClick={() => setShowSort(s => !s)}
             className="btn-prototype-tab flex items-center gap-1.5 cursor-pointer"
           >
-            Sort: {sort}<ChevronDown size={11} />
+            {t('initiatives.sortLabel')}: {SORT_LABEL[sort]}<ChevronDown size={11} />
           </button>
           {showSort && (
             <div className={`absolute right-0 top-full mt-1 rounded-[7px] shadow-lg z-10 min-w-[160px] py-1 border ${dark ? 'bg-[#15151f] border-white/10' : 'bg-white border-gray-200'}`}>
-              {SORT_OPTIONS.map(o => (
+              {SORT_KEYS.map(sk => (
                 <button
-                  key={o}
-                  onClick={() => { setSort(o); setShowSort(false) }}
-                  className={`w-full text-left px-3 py-1.5 text-[12px] font-medium cursor-pointer ${sort === o ? 'text-blue-400' : dark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
+                  key={sk}
+                  onClick={() => { setSort(sk); setShowSort(false) }}
+                  className={`w-full text-left px-3 py-1.5 text-[12px] font-medium cursor-pointer ${sort === sk ? 'text-blue-400' : dark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
                 >
-                  {o}
+                  {SORT_LABEL[sk]}
                 </button>
               ))}
             </div>
@@ -200,13 +215,13 @@ export default function Initiatives() {
 
       {!loading && processed.length === 0 && (
         <div className={`text-center py-20 border-2 border-dashed rounded-xl text-[13px] ${dark ? 'border-white/10 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
-          No initiatives found.
+          {t('initiatives.empty')}
         </div>
       )}
 
       {!loading && processed.length > 0 && (
         <>
-          <p className={`text-[12px] mb-3 ${muted}`}>{processed.length} initiatives</p>
+          <p className={`text-[12px] mb-3 ${muted}`}>{t('initiatives.count', { n: processed.length })}</p>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))' }}>
             {processed.map((init) => {
               const s = summaries[init.id] || {}
@@ -293,26 +308,26 @@ export default function Initiatives() {
                   )}
 
                   <p className={`text-[11.5px] mb-2.5 ${muted}`}>
-                    {s.scopeLabel || 'No connections'}{updated && <> · updated {updated}</>}
+                    {s.scopeLabel || t('initiatives.noConnections')}{updated && <> · {t('initiatives.changed')} {updated}</>}
                   </p>
 
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[5px] border ${dark ? 'bg-white/[0.03] border-white/10 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                      <Ticket size={10} className="opacity-70" />{s.ticketCount ?? 0} tickets
+                      <Ticket size={10} className="opacity-70" />{s.ticketCount ?? 0} {t('initiatives.tickets')}
                     </span>
                     {s.commitCount > 0 && (
                       <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[5px] border ${dark ? 'bg-white/[0.03] border-white/10 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                        <GitCommitHorizontal size={10} className="opacity-70" />{s.commitCount} commits
+                        <GitCommitHorizontal size={10} className="opacity-70" />{s.commitCount} {t('initiatives.commits')}
                       </span>
                     )}
                     {changed && (
                       <span className="badge-prototype badge-decision">
-                        changed
+                        {t('initiatives.changed')}
                       </span>
                     )}
                     {s.openCount > 0 && (
                       <span className="badge-prototype badge-open">
-                        {s.openCount} open
+                        {s.openCount} {t('initiatives.open')}
                       </span>
                     )}
                   </div>

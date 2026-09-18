@@ -1,60 +1,63 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext'
 
 const TOUR_KEY = 'nplc_tour_done'
-
-const STEPS = [
-  {
-    title: 'Welcome to NLPC!',
-    desc: 'Your AI-powered product memory. Never lose context again. Let\'s take a quick tour — it\'ll take under 2 minutes.',
-    emoji: '🧠',
-    target: null,
-  },
-  {
-    title: 'Initiatives',
-    desc: 'An initiative is a product feature or project. Create one here. Everything — tickets, commits, decisions — lives inside an initiative.',
-    emoji: '📁',
-    target: 'tour-initiatives',
-  },
-  {
-    title: 'Global Search',
-    desc: 'Search across every initiative, decision, and document in your workspace instantly with AI-powered semantic search.',
-    emoji: '🔍',
-    target: 'tour-search',
-  },
-  {
-    title: 'Integrations',
-    desc: 'Connect your Jira, GitHub and SMTP accounts here. Once linked, NLPC syncs tickets and commits automatically.',
-    emoji: '🔌',
-    target: 'tour-integrations',
-  },
-  {
-    title: 'Settings',
-    desc: 'Customise the app appearance — switch between dark and light mode, and adjust font size to your preference.',
-    emoji: '⚙️',
-    target: 'tour-settings',
-  },
-  {
-    title: 'Workspace Tabs',
-    desc: 'Inside each initiative: Timeline shows decisions, Ask lets you question your data with AI, Brief generates an executive summary, and Sources holds raw documents.',
-    emoji: '🗂️',
-    target: null,
-  },
-  {
-    title: 'You\'re all set!',
-    desc: 'Create your first initiative, connect Jira, sync — then ask "What was decided about auth?" and watch the magic.',
-    emoji: '🚀',
-    target: null,
-  },
-]
 
 const SIDEBAR_TARGETS = new Set(['tour-initiatives', 'tour-search', 'tour-integrations', 'tour-settings'])
 
 export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [step, setStep] = useState(0)
   const [cardTop, setCardTop] = useState(null)
+
+  const STEPS = [
+    {
+      title: t('tour.step1.title'),
+      desc: t('tour.step1.desc'),
+      emoji: '🧠',
+      target: null,
+    },
+    {
+      title: t('tour.step2.title'),
+      desc: t('tour.step2.desc'),
+      emoji: '📁',
+      target: 'tour-initiatives',
+    },
+    {
+      title: t('tour.step3.title'),
+      desc: t('tour.step3.desc'),
+      emoji: '🔍',
+      target: 'tour-search',
+    },
+    {
+      title: t('tour.step4.title'),
+      desc: t('tour.step4.desc'),
+      emoji: '🔌',
+      target: 'tour-integrations',
+    },
+    {
+      title: t('tour.step5.title'),
+      desc: t('tour.step5.desc'),
+      emoji: '⚙️',
+      target: 'tour-settings',
+    },
+    {
+      title: t('tour.step6.title'),
+      desc: t('tour.step6.desc'),
+      emoji: '🗂️',
+      target: null,
+    },
+    {
+      title: t('tour.step7.title'),
+      desc: t('tour.step7.desc'),
+      emoji: '🚀',
+      target: null,
+    },
+  ]
+
   const current = STEPS[step]
   const isLast = step === STEPS.length - 1
   const isSidebarStep = current.target && SIDEBAR_TARGETS.has(current.target)
@@ -139,7 +142,7 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
           <div className="flex items-center gap-2">
             <Sparkles size={13} className="text-emerald-400" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
-              App Tour · {step + 1}/{STEPS.length}
+              {t('tour.label')} · {step + 1}/{STEPS.length}
             </span>
           </div>
           <button type="button" onClick={finish} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">
@@ -170,7 +173,7 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
             disabled={step === 0}
             className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
-            <ChevronLeft size={14} /> Back
+            <ChevronLeft size={14} /> {t('tour.back')}
           </button>
 
           <div className="flex gap-1.5">
@@ -190,7 +193,7 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all cursor-pointer"
             style={{ background: 'linear-gradient(135deg, #059669, #0d9488)', boxShadow: '0 2px 8px rgba(5,150,105,0.4)' }}
           >
-            {isLast ? 'Get started' : 'Next'} {!isLast && <ChevronRight size={14} />}
+            {isLast ? t('tour.getStarted') : t('tour.next')} {!isLast && <ChevronRight size={14} />}
           </button>
         </div>
       </div>

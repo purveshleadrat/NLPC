@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useInitiative } from '../context/InitiativeContext'
+import { useLanguage } from '../context/LanguageContext'
 import { getConnections, getJiraProjects, bindConnection } from '../api/client'
 
 import SideSheet from './SideSheet'
@@ -17,6 +18,7 @@ import {
 // empty select is worse than not showing the field at all.
 export default function NewInitiativeModal({ onClose }) {
   const { create } = useInitiative()
+  const { t } = useLanguage()
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -92,47 +94,47 @@ export default function NewInitiativeModal({ onClose }) {
   }
 
   return (
-    <SideSheet title="New initiative" onClose={onClose}>
+    <SideSheet title={t('newInit.title')} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 h-full">
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div>
-            <label className={label}>Name</label>
+            <label className={label}>{t('newInit.name')}</label>
             <Input
               autoFocus
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="e.g. Notifications v2"
+              placeholder={t('newInit.namePlaceholder')}
             />
           </div>
 
           <div>
-            <label className={label}>Description</label>
+            <label className={label}>{t('newInit.description')}</label>
             <Textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="What is this initiative about? (optional)"
+              placeholder={t('newInit.descPlaceholder')}
               rows={3}
             />
           </div>
 
           <div>
-            <label className={label}>Priority</label>
+            <label className={label}>{t('newInit.priority')}</label>
             <PrioritySelect value={priority} onChange={setPriority} />
           </div>
 
           {connections === null && (
             <div className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-              <Loader2 size={13} className="animate-spin" /> Checking connections…
+              <Loader2 size={13} className="animate-spin" /> {t('newInit.checkingConnections')}
             </div>
           )}
 
           {jiraConnections.length > 0 && (
             <div>
-              <label className={label}>Jira project</label>
+              <label className={label}>{t('newInit.jiraProject')}</label>
               {jiraConnections.length > 1 && (
                 <Select value={jiraConnectionId} onValueChange={setJiraConnectionId}>
                   <SelectTrigger className="mb-2">
-                    <SelectValue placeholder="Select a Jira connection…" />
+                    <SelectValue placeholder={t('newInit.selectJiraConn')} />
                   </SelectTrigger>
                   <SelectContent>
                     {jiraConnections.map(c => (
@@ -148,10 +150,10 @@ export default function NewInitiativeModal({ onClose }) {
                   disabled={!jiraConnectionId || jiraProjectsLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="No Jira project (optional)" />
+                    <SelectValue placeholder={t('newInit.noJiraProject')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Jira project (optional)</SelectItem>
+                    <SelectItem value="">{t('newInit.noJiraProject')}</SelectItem>
                     {jiraProjects.map(p => (
                       <SelectItem key={p.key} value={p.key}>{p.name} ({p.key})</SelectItem>
                     ))}
@@ -166,13 +168,13 @@ export default function NewInitiativeModal({ onClose }) {
 
           {githubConnections.length > 0 && (
             <div className="space-y-2">
-              <label className={label}>GitHub repo</label>
+              <label className={label}>{t('newInit.githubRepo')}</label>
               <Select value={githubConnectionId} onValueChange={setGithubConnectionId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="No repo (optional)" />
+                  <SelectValue placeholder={t('newInit.noRepo')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No repo (optional)</SelectItem>
+                  <SelectItem value="">{t('newInit.noRepo')}</SelectItem>
                   {githubConnections.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.label} ({c.accountId}/{c.repo})</SelectItem>
                   ))}
@@ -182,7 +184,7 @@ export default function NewInitiativeModal({ onClose }) {
                 <Input
                   value={branchPrefix}
                   onChange={e => setBranchPrefix(e.target.value)}
-                  placeholder="Branch prefix (optional, e.g. feature/)"
+                  placeholder={t('newInit.branchPrefix')}
                 />
               )}
             </div>
@@ -190,7 +192,7 @@ export default function NewInitiativeModal({ onClose }) {
 
           {connections !== null && jiraConnections.length === 0 && githubConnections.length === 0 && (
             <p className="text-[12.5px] text-muted-foreground">
-              No Jira or GitHub connections yet — add one in Settings to link tickets and commits automatically.
+              {t('newInit.noConnections')}
             </p>
           )}
 
@@ -200,10 +202,10 @@ export default function NewInitiativeModal({ onClose }) {
         </div>
 
         <div className="p-4 border-t border-white/10 bg-background/95 backdrop-blur shrink-0 flex items-center justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
           <Button type="submit" variant="brand" disabled={!name.trim() || submitting}>
             {submitting && <Loader2 size={13} className="animate-spin" />}
-            Create & sync
+            {t('newInit.createSync')}
           </Button>
         </div>
       </form>

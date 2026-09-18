@@ -11,6 +11,7 @@ import {
 } from '../api/client'
 import { useInitiative } from '../context/InitiativeContext'
 import { useTheme } from '../context/ThemeContext'
+import { useLanguage } from '../context/LanguageContext'
 import SideSheet from './SideSheet'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -45,7 +46,8 @@ function projectTicketJql(projectKey, raw) {
 // A dropdown with a search box that shows the top 10 matches. `onQueryChange` lets the parent
 // either filter locally (projects, branches) or re-query the server (tickets).
 function SearchableSelect({
-  placeholder, valueLabel, items, loading, disabled, onQueryChange, onSelect, emptyText = 'No results',
+  placeholder, valueLabel, items, loading, disabled, onQueryChange, onSelect, emptyText,
+  searchPlaceholder, loadingText, showingOfText,
 }) {
   const { dark } = useTheme()
   const [open, setOpen] = useState(false)
@@ -58,6 +60,7 @@ function SearchableSelect({
   const labelColor = dark ? '#f1f5f9' : '#111827'
   const subColor = dark ? 'rgba(255,255,255,0.45)' : '#6b7280'
   const hoverBg = dark ? 'rgba(255,255,255,0.05)' : '#f3f4f6'
+  const popupBorder = dark ? 'rgba(255,255,255,0.08)' : '#e5e7eb'
 
   return (
     <Popover
@@ -84,7 +87,7 @@ function SearchableSelect({
               autoFocus
               value={q}
               onChange={(e) => { setQ(e.target.value); onQueryChange?.(e.target.value) }}
-              placeholder="Search…"
+              placeholder={searchPlaceholder}
               className="h-8 w-full bg-transparent text-[12.5px] outline-none"
               style={{ color: inputColor }}
             />
@@ -93,7 +96,7 @@ function SearchableSelect({
         <div className="max-h-64 overflow-y-auto py-1">
           {loading ? (
             <div className="flex items-center gap-2 px-3 py-3 text-[12.5px]" style={{ color: mutedColor }}>
-              <Loader2 size={13} className="animate-spin" /> Loading…
+              <Loader2 size={13} className="animate-spin" /> {loadingText}
             </div>
           ) : shown.length === 0 ? (
             <div className="px-3 py-3 text-[12.5px]" style={{ color: mutedColor }}>{emptyText}</div>
@@ -114,7 +117,7 @@ function SearchableSelect({
           )}
           {!loading && items.length > 10 && (
             <div className="px-3 py-1.5 text-[11px]" style={{ borderTop: `1px solid ${popupBorder}`, color: mutedColor }}>
-              Showing 10 of {items.length} — refine your search
+              {showingOfText ? showingOfText.replace('{shown}', shown.length).replace('{total}', items.length) : `Showing ${shown.length} of ${items.length}`}
             </div>
           )}
         </div>
@@ -125,6 +128,7 @@ function SearchableSelect({
 
 export default function AddSourceSheet({ onClose, onAdded }) {
   const { currentId } = useInitiative()
+  const { t } = useLanguage()
 
   const [connections, setConnections] = useState([])
   const [kind, setKind] = useState('note') // note | jira | git
@@ -139,10 +143,10 @@ export default function AddSourceSheet({ onClose, onAdded }) {
   }, [])
 
   const TYPES = [
-    { id: 'note', label: 'Notes', icon: FileText, show: true },
-    { id: 'jira', label: 'Jira', icon: Ticket, show: jiraConns.length > 0 },
-    { id: 'git', label: 'Git', icon: Boxes, show: gitConns.length > 0 },
-  ].filter((t) => t.show)
+    { id: 'note', label: t('addSource.notesTab'), icon: FileText, show: true },
+    { id: 'jira', label: t('addSource.jiraTab'), icon: Ticket, show: jiraConns.length > 0 },
+    { id: 'git', label: t('addSource.gitTab'), icon: Boxes, show: gitConns.length > 0 },
+  ].filter((tp) => tp.show)
 
   function finishImport(r) {
     const ex = r?.extraction
@@ -154,11 +158,11 @@ export default function AddSourceSheet({ onClose, onAdded }) {
   }
 
   return (
-    <SideSheet title="Add a source" onClose={onClose}>
+    <SideSheet title={t('addSource.title')} onClose={onClose}>
       <div className="flex flex-col flex-1 min-h-0 h-full">
         {/* Source type picker */}
         <div className="px-5 pt-5">
-          <label className={labelCls}>Source type</label>
+          <label className={labelCls}>{t('addSource.sourceType')}</label>
           <div className="flex gap-2">
             {TYPES.map(({ id, label, icon: Icon }) => (
               <button
@@ -183,6 +187,7 @@ export default function AddSourceSheet({ onClose, onAdded }) {
             status={status} message={message}
             setStatus={setStatus} setMessage={setMessage}
             onAdded={onAdded} onClose={onClose}
+            t={t}
           />
         )}
         {kind === 'jira' && (
@@ -191,6 +196,7 @@ export default function AddSourceSheet({ onClose, onAdded }) {
             status={status} message={message}
             setStatus={setStatus} setMessage={setMessage}
             onDone={finishImport} onClose={onClose}
+            t={t}
           />
         )}
         {kind === 'git' && (
@@ -199,6 +205,7 @@ export default function AddSourceSheet({ onClose, onAdded }) {
             status={status} message={message}
             setStatus={setStatus} setMessage={setMessage}
             onDone={finishImport} onClose={onClose}
+            t={t}
           />
         )}
       </div>
@@ -207,14 +214,14 @@ export default function AddSourceSheet({ onClose, onAdded }) {
 }
 
 // ── Notes: manual source ingest ────────────────────────────────────────────────
-function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded, onClose }) {
+function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded, onClose, t }) {
   const [form, setForm] = useState({ title: '', rawText: '', docDate: '', author: '', externalRef: '' })
   const [dateOpen, setDateOpen] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.title || !form.rawText || !form.docDate) {
-      setStatus('error'); setMessage('Title, date and content are required.'); return
+      setStatus('error'); setMessage(t('addSource.requiredError')); return
     }
     setStatus('loading')
     try {
@@ -230,7 +237,7 @@ function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded,
     <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
         <div>
-          <label className={labelCls}>Date *</label>
+          <label className={labelCls}>{t('addSource.dateLabel')}</label>
           <Popover open={dateOpen} onOpenChange={setDateOpen}>
             <PopoverTrigger asChild>
               <button
@@ -238,7 +245,7 @@ function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded,
                 className="flex h-9 w-full items-center justify-between rounded-[7px] border border-input bg-background/50 px-3 py-1.5 text-[12.5px] font-normal transition-colors hover:bg-white/5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer text-left"
               >
                 <span className={form.docDate ? 'text-foreground' : 'text-muted-foreground'}>
-                  {form.docDate ? format(new Date(form.docDate + 'T00:00:00'), 'dd MMM yyyy') : 'Pick a date'}
+                  {form.docDate ? format(new Date(form.docDate + 'T00:00:00'), 'dd MMM yyyy') : t('addSource.pickDate')}
                 </span>
                 <CalendarIcon className="size-3.5 opacity-50 ml-2 flex-shrink-0" />
               </button>
@@ -263,38 +270,38 @@ function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded,
         </div>
 
         <div>
-          <label className={labelCls}>Title *</label>
+          <label className={labelCls}>{t('addSource.titleLabel')}</label>
           <Input
             type="text" value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="e.g. Security Review: Bulk Update Scope Reduction"
+            placeholder={t('addSource.titlePlaceholder')}
           />
         </div>
 
         <div>
-          <label className={labelCls}>Author</label>
+          <label className={labelCls}>{t('addSource.authorLabel')}</label>
           <Input
             type="text" value={form.author}
             onChange={(e) => setForm({ ...form, author: e.target.value })}
-            placeholder="e.g. Priya S."
+            placeholder={t('addSource.authorPlaceholder')}
           />
         </div>
 
         <div>
-          <label className={labelCls}>External Ref</label>
+          <label className={labelCls}>{t('addSource.externalRefLabel')}</label>
           <Input
             type="text" value={form.externalRef}
             onChange={(e) => setForm({ ...form, externalRef: e.target.value })}
-            placeholder="e.g. NLPC-88, REQ-204"
+            placeholder={t('addSource.externalRefPlaceholder')}
           />
         </div>
 
         <div>
-          <label className={labelCls}>Content *</label>
+          <label className={labelCls}>{t('addSource.contentLabel')}</label>
           <Textarea
             rows={8} value={form.rawText}
             onChange={(e) => setForm({ ...form, rawText: e.target.value })}
-            placeholder="Paste the full text of the note here…"
+            placeholder={t('addSource.contentPlaceholder')}
             className="font-mono text-[12.5px]"
           />
         </div>
@@ -302,10 +309,10 @@ function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded,
         <StatusNote status={status} message={message} />
       </div>
 
-      <FooterBar onClose={onClose}>
+      <FooterBar onClose={onClose} t={t}>
         <Button type="submit" variant="brand" disabled={status === 'loading'}>
           {status === 'loading' ? <Loader2 size={13} className="animate-spin" /> : <Zap size={13} />}
-          {status === 'loading' ? 'Ingesting…' : 'Ingest source'}
+          {status === 'loading' ? t('addSource.ingesting') : t('addSource.ingestButton')}
         </Button>
       </FooterBar>
     </form>
@@ -313,7 +320,7 @@ function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded,
 }
 
 // ── Jira: connection → project → ticket → import ───────────────────────────────
-function JiraForm({ currentId, conns, status, message, setStatus, setMessage, onDone, onClose }) {
+function JiraForm({ currentId, conns, status, message, setStatus, setMessage, onDone, onClose, t }) {
   const [connId, setConnId] = useState(conns.length === 1 ? conns[0].id : '')
   const [projects, setProjects] = useState([])
   const [projectQuery, setProjectQuery] = useState('')
@@ -381,50 +388,56 @@ function JiraForm({ currentId, conns, status, message, setStatus, setMessage, on
       const res = await importJira(currentId, connId, ticket.value)
       onDone(res.data)
     } catch (err) {
-      setStatus('error'); setMessage(err?.response?.data?.message || err.message || 'Import failed.')
+      setStatus('error'); setMessage(err?.response?.data?.message || err.message || t('addSource.importFailed'))
     }
   }
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
-        <ConnectionField conns={conns} connId={connId} onChange={setConnId} noun="Jira site" />
+        <ConnectionField conns={conns} connId={connId} onChange={setConnId} noun={t('addSource.jiraSite')} t={t} />
 
         <div>
-          <label className={labelCls}>Project</label>
+          <label className={labelCls}>{t('addSource.project')}</label>
           <SearchableSelect
-            placeholder="Select a project"
+            placeholder={t('addSource.selectProject')}
             valueLabel={project?.label}
             items={filteredProjects}
             loading={projectsLoading}
             disabled={!connId}
             onQueryChange={setProjectQuery}
             onSelect={onProjectSelect}
-            emptyText="No projects"
+            emptyText={t('addSource.noProjects')}
+            searchPlaceholder={t('addSource.searchPlaceholder')}
+            loadingText={t('addSource.loadingText')}
+            showingOfText={t('addSource.showingOf')}
           />
         </div>
 
         <div>
-          <label className={labelCls}>Ticket</label>
+          <label className={labelCls}>{t('addSource.ticket')}</label>
           <SearchableSelect
-            placeholder={project ? 'Select a ticket' : 'Pick a project first'}
+            placeholder={project ? t('addSource.selectTicket') : t('addSource.pickProjectFirst')}
             valueLabel={ticket?.label}
             items={tickets}
             loading={ticketsLoading}
             disabled={!project}
             onQueryChange={onTicketQuery}
             onSelect={setTicket}
-            emptyText="No tickets"
+            emptyText={t('addSource.noTickets')}
+            searchPlaceholder={t('addSource.searchPlaceholder')}
+            loadingText={t('addSource.loadingText')}
+            showingOfText={t('addSource.showingOf')}
           />
         </div>
 
         <StatusNote status={status} message={message} />
       </div>
 
-      <FooterBar onClose={onClose}>
+      <FooterBar onClose={onClose} t={t}>
         <Button type="button" variant="brand" onClick={handleImport} disabled={!ticket || status === 'loading'}>
           {status === 'loading' ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-          {status === 'loading' ? 'Importing…' : 'Import ticket'}
+          {status === 'loading' ? t('addSource.importing') : t('addSource.importTicket')}
         </Button>
       </FooterBar>
     </div>
@@ -432,7 +445,7 @@ function JiraForm({ currentId, conns, status, message, setStatus, setMessage, on
 }
 
 // ── Git: connection → branch → import ──────────────────────────────────────────
-function GitForm({ currentId, conns, status, message, setStatus, setMessage, onDone, onClose }) {
+function GitForm({ currentId, conns, status, message, setStatus, setMessage, onDone, onClose, t }) {
   const [connId, setConnId] = useState(conns.length === 1 ? conns[0].id : '')
   const [branches, setBranches] = useState([])
   const [branchQuery, setBranchQuery] = useState('')
@@ -465,36 +478,39 @@ function GitForm({ currentId, conns, status, message, setStatus, setMessage, onD
       const res = await importGitBranch(currentId, connId, branch.value)
       onDone(res.data)
     } catch (err) {
-      setStatus('error'); setMessage(err?.response?.data?.message || err.message || 'Import failed.')
+      setStatus('error'); setMessage(err?.response?.data?.message || err.message || t('addSource.importFailed'))
     }
   }
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
-        <ConnectionField conns={conns} connId={connId} onChange={setConnId} noun="GitHub repo" isGit />
+        <ConnectionField conns={conns} connId={connId} onChange={setConnId} noun={t('addSource.githubRepo')} isGit t={t} />
 
         <div>
-          <label className={labelCls}>Branch</label>
+          <label className={labelCls}>{t('addSource.branch')}</label>
           <SearchableSelect
-            placeholder="Select a branch"
+            placeholder={t('addSource.selectBranch')}
             valueLabel={branch?.label}
             items={filtered}
             loading={branchesLoading}
             disabled={!connId}
             onQueryChange={setBranchQuery}
             onSelect={setBranch}
-            emptyText="No branches"
+            emptyText={t('addSource.noBranches')}
+            searchPlaceholder={t('addSource.searchPlaceholder')}
+            loadingText={t('addSource.loadingText')}
+            showingOfText={t('addSource.showingOf')}
           />
         </div>
 
         <StatusNote status={status} message={message} />
       </div>
 
-      <FooterBar onClose={onClose}>
+      <FooterBar onClose={onClose} t={t}>
         <Button type="button" variant="brand" onClick={handleImport} disabled={!branch || status === 'loading'}>
           {status === 'loading' ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-          {status === 'loading' ? 'Importing…' : 'Import branch'}
+          {status === 'loading' ? t('addSource.importing') : t('addSource.importBranch')}
         </Button>
       </FooterBar>
     </div>
@@ -502,7 +518,7 @@ function GitForm({ currentId, conns, status, message, setStatus, setMessage, onD
 }
 
 // ── Shared bits ────────────────────────────────────────────────────────────────
-function ConnectionField({ conns, connId, onChange, noun, isGit }) {
+function ConnectionField({ conns, connId, onChange, noun, isGit, t }) {
   const labelFor = (c) => (isGit ? `${c.label} — ${c.accountId}/${c.repo}` : `${c.label} — ${c.accountId}`)
   if (conns.length === 1) {
     return (
@@ -518,7 +534,7 @@ function ConnectionField({ conns, connId, onChange, noun, isGit }) {
     <div>
       <label className={labelCls}>{noun} *</label>
       <Select value={connId} onValueChange={onChange}>
-        <SelectTrigger><SelectValue placeholder={`Choose a ${noun}`} /></SelectTrigger>
+        <SelectTrigger><SelectValue placeholder={t('addSource.chooseConnection').replace('{noun}', noun)} /></SelectTrigger>
         <SelectContent>
           {conns.map((c) => (
             <SelectItem key={c.id} value={c.id}>{labelFor(c)}</SelectItem>
@@ -547,10 +563,10 @@ function StatusNote({ status, message }) {
   return null
 }
 
-function FooterBar({ onClose, children }) {
+function FooterBar({ onClose, children, t }) {
   return (
     <div className="p-4 border-t border-white/10 bg-background/95 backdrop-blur shrink-0 flex items-center justify-end gap-2">
-      <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
+      <Button type="button" variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
       {children}
     </div>
   )

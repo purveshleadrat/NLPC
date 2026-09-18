@@ -3,14 +3,7 @@ import { askQuestion } from '../api/client'
 import { Send, AlertTriangle, User, Bot, Sparkles } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
-
-const EXAMPLE_QUESTIONS = [
-  'What changed in bulk update and why?',
-  'What is the current approved scope?',
-  'Which requirements were affected by the security review?',
-  'Who decided to reduce the scope?',
-  'What open questions remain unresolved?',
-]
+import { useLanguage } from '../context/LanguageContext'
 
 function TypingIndicator({ dark }) {
   return (
@@ -71,7 +64,7 @@ function Message({ msg, dark }) {
         {msg.hasContradiction && (
           <div className="flex items-center gap-1.5 text-[17px] text-amber-400 px-1">
             <AlertTriangle size={11} />
-            Contradictory evidence — verify manually
+            {t('ask.contradictory')}
           </div>
         )}
 
@@ -88,10 +81,11 @@ function Message({ msg, dark }) {
 export default function AskContext() {
   const { dark } = useTheme()
   const { currentId } = useInitiative()
+  const { t } = useLanguage()
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Hi! Ask me anything about this product initiative. I'll answer using only the ingested sources and cite where each answer comes from.",
+      content: t('ask.initialMessage'),
     },
   ])
   const [input, setInput] = useState('')
@@ -124,7 +118,7 @@ export default function AskContext() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: `Error: ${err?.response?.data?.message || err.message || 'Something went wrong.'}` },
+        { role: 'assistant', content: `${t('ask.errorPrefix')}${err?.response?.data?.message || err.message || 'Something went wrong.'}` },
       ])
     } finally {
       setLoading(false)
@@ -145,9 +139,9 @@ export default function AskContext() {
       {/* Example pills */}
       <div className="flex flex-wrap gap-1.5 mb-4 flex-shrink-0 items-center">
         <div className={`flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide mr-1 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
-          <Sparkles size={10} /> Try asking
+          <Sparkles size={10} /> {t('ask.tryAsking')}
         </div>
-        {EXAMPLE_QUESTIONS.map((q) => (
+        {[t('ask.q1'), t('ask.q2'), t('ask.q3'), t('ask.q4'), t('ask.q5')].map((q) => (
           <button
             key={q}
             onClick={() => send(q)}
@@ -177,7 +171,7 @@ export default function AskContext() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything about this product initiative…"
+          placeholder={t('ask.inputPlaceholder')}
           disabled={loading}
           className={`flex-1 border rounded-[7px] px-3.5 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-emerald-400 disabled:opacity-60 transition-colors ${inp}`}
         />

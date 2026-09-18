@@ -4,6 +4,7 @@ import {
   getInitiativeConnections,
 } from '../api/client'
 import { useTheme } from '../context/ThemeContext'
+import { useLanguage } from '../context/LanguageContext'
 import { useInitiative } from '../context/InitiativeContext'
 import {
   Plug, Plus, Trash2, Loader2, AlertTriangle, CheckCircle, Boxes, Ticket, Mail,
@@ -22,6 +23,7 @@ const PROVIDERS = [
 
 export default function Integrations() {
   const { dark } = useTheme()
+  const { t } = useLanguage()
   const { currentId } = useInitiative()
 
   const [connections, setConnections] = useState([])
@@ -32,7 +34,7 @@ export default function Integrations() {
   const [saving, setSaving] = useState(false)
 
   const card  = dark ? 'glass-dark' : 'glass-light shadow-sm'
-  const label = dark ? 'text-emerald-400' : 'text-emerald-700'
+  const labelCls = dark ? 'text-emerald-400' : 'text-emerald-700'
   const muted = dark ? 'text-gray-500' : 'text-gray-400'
   const head  = dark ? 'text-gray-100' : 'text-gray-800'
   const inp   = dark
@@ -71,23 +73,42 @@ export default function Integrations() {
       setForm(BLANK[form.provider])
       await load()
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to add connection')
+      setError(err?.response?.data?.message || err.message || t('integrations.addConnection'))
     } finally {
       setSaving(false)
     }
   }
 
   async function removeConnection(id) {
-    if (!window.confirm('Delete this connection? Its stored token is destroyed.')) return
+    if (!window.confirm(t('integrations.deleteConfirm'))) return
     try { await deleteConnection(id); await load() }
     catch (err) { setError(err?.response?.data?.message || err.message) }
+  }
+
+  const fieldLabel = (field) => {
+    if (field === 'baseUrl') {
+      if (form.provider === 'JIRA') return t('integrations.baseUrlJira')
+      if (form.provider === 'SMTP') return t('integrations.baseUrlSmtp')
+      return t('integrations.baseUrlGithub')
+    }
+    if (field === 'accountId') {
+      if (form.provider === 'JIRA') return t('integrations.accountEmailJira')
+      if (form.provider === 'SMTP') return t('integrations.fromEmailSmtp')
+      return t('integrations.ownerGithub')
+    }
+    if (field === 'secret') {
+      if (form.provider === 'JIRA') return t('integrations.apiTokenJira')
+      if (form.provider === 'SMTP') return t('integrations.passwordSmtp')
+      return t('integrations.patGithub')
+    }
+    return ''
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className={`text-[20px] font-bold ${head}`}>Integrations</h2>
-        <p className={`text-[13px] ${muted}`}>Connect Jira, GitHub and SMTP — link them to initiatives so Sync can pull from them.</p>
+        <h2 className={`text-[20px] font-bold ${head}`}>{t('integrations.title')}</h2>
+        <p className={`text-[13px] ${muted}`}>{t('integrations.subtitle')}</p>
       </div>
 
       {error && (
@@ -100,8 +121,8 @@ export default function Integrations() {
       <div className={`rounded-2xl p-4 ${card}`}>
         <div className="flex items-center gap-2 mb-3">
           <Plug size={14} className="text-emerald-400 flex-shrink-0" />
-          <h3 className={`text-[15px] font-semibold ${head}`}>Connections</h3>
-          <span className={`text-[11px] ${muted} hidden sm:inline`}>· link one so Sync pulls from it</span>
+          <h3 className={`text-[15px] font-semibold ${head}`}>{t('integrations.connectionsTitle')}</h3>
+          <span className={`text-[11px] ${muted} hidden sm:inline`}>{t('integrations.connectionsHint')}</span>
         </div>
 
         {loading ? (
@@ -118,7 +139,7 @@ export default function Integrations() {
             ))}
           </div>
         ) : connections.length === 0 ? (
-          <p className={`text-[13px] py-3 ${muted}`}>No connections yet. Add one below.</p>
+          <p className={`text-[13px] py-3 ${muted}`}>{t('integrations.noConnections')}</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {connections.map((c) => {
@@ -158,7 +179,7 @@ export default function Integrations() {
       <div className={`rounded-2xl p-4 ${card}`}>
         <div className="flex items-center gap-2 mb-3">
           <Plus size={14} className="text-emerald-400" />
-          <h3 className={`text-[15px] font-semibold ${head}`}>Add a connection</h3>
+          <h3 className={`text-[15px] font-semibold ${head}`}>{t('integrations.addTitle')}</h3>
         </div>
 
         {/* Provider tabs */}
@@ -175,42 +196,62 @@ export default function Integrations() {
 
         <form onSubmit={addConnection} className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Label" value={form.label} onChange={(v) => setForm({ ...form, label: v })}
-              placeholder={form.provider === 'SMTP' ? 'e.g. Team Mailer' : 'e.g. Prod Jira'} inp={inp} labelCls={label} required />
             <Field
-              label={form.provider === 'JIRA' ? 'Base URL (your-domain.atlassian.net)' : form.provider === 'SMTP' ? 'SMTP server' : 'Base URL'}
-              value={form.baseUrl} onChange={(v) => setForm({ ...form, baseUrl: v })}
+              label={t('integrations.labelField')}
+              value={form.label}
+              onChange={(v) => setForm({ ...form, label: v })}
+              placeholder={form.provider === 'SMTP' ? t('integrations.labelPlaceholderSmtp') : t('integrations.labelPlaceholderOther')}
+              inp={inp} labelCls={labelCls} required
+            />
+            <Field
+              label={fieldLabel('baseUrl')}
+              value={form.baseUrl}
+              onChange={(v) => setForm({ ...form, baseUrl: v })}
               placeholder={form.provider === 'SMTP' ? 'smtp.gmail.com' : undefined}
-              inp={inp} labelCls={label} required />
+              inp={inp} labelCls={labelCls} required
+            />
             <Field
-              label={form.provider === 'JIRA' ? 'Account email' : form.provider === 'SMTP' ? 'From email' : 'Owner / org'}
-              value={form.accountId} onChange={(v) => setForm({ ...form, accountId: v })}
+              label={fieldLabel('accountId')}
+              value={form.accountId}
+              onChange={(v) => setForm({ ...form, accountId: v })}
               placeholder={form.provider === 'GITHUB' ? 'octocat' : 'you@example.com'}
-              inp={inp} labelCls={label} required />
+              inp={inp} labelCls={labelCls} required
+            />
             {form.provider === 'GITHUB' && (
-              <Field label="Repo" value={form.repo} onChange={(v) => setForm({ ...form, repo: v })}
-                placeholder="my-repo" inp={inp} labelCls={label} required />
+              <Field
+                label={t('integrations.repo')}
+                value={form.repo}
+                onChange={(v) => setForm({ ...form, repo: v })}
+                placeholder="my-repo" inp={inp} labelCls={labelCls} required
+              />
             )}
             {form.provider === 'SMTP' && (
-              <Field label="Port" value={form.port} onChange={(v) => setForm({ ...form, port: v })}
-                placeholder="587" type="number" inp={inp} labelCls={label} required />
+              <Field
+                label={t('integrations.port')}
+                value={form.port}
+                onChange={(v) => setForm({ ...form, port: v })}
+                placeholder="587" type="number" inp={inp} labelCls={labelCls} required
+              />
             )}
             <Field
-              label={form.provider === 'JIRA' ? 'API token' : form.provider === 'SMTP' ? 'Password' : 'Personal access token'}
-              value={form.secret} onChange={(v) => setForm({ ...form, secret: v })}
-              placeholder="•••••••• (write-only)" type="password" inp={inp} labelCls={label} required />
+              label={fieldLabel('secret')}
+              value={form.secret}
+              onChange={(v) => setForm({ ...form, secret: v })}
+              placeholder={t('integrations.secretPlaceholder')}
+              type="password" inp={inp} labelCls={labelCls} required
+            />
           </div>
 
           <div className="flex justify-end">
             <button type="submit" disabled={saving}
               className="inline-flex items-center justify-center gap-2 brand-gradient text-white px-4 py-2.5 rounded-xl text-[13.5px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
               {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-              {saving ? 'Saving…' : 'Add connection'}
+              {saving ? t('integrations.saving') : t('integrations.addConnection')}
             </button>
           </div>
         </form>
         <p className={`text-[11px] mt-3 leading-relaxed ${muted}`}>
-          Tokens are encrypted at rest and never shown again. Connectors are read-only.
+          {t('integrations.tokenNote')}
         </p>
       </div>
     </div>
