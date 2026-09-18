@@ -32,7 +32,7 @@ Reason: The original requirement (REQ-204) allowed bulk-update across contacts, 
 
 Action items:
 - Update REQ-204 to contacts-only scope (Owner: Priya)
-- Create ticket NPLC-88 to track per-field audit trail work (Owner: Karan)
+- Create ticket NLPC-88 to track per-field audit trail work (Owner: Karan)
 - QA test cases TC-44 through TC-51 for deals bulk-update are now superseded
 
 Open question: Will the deals bulk-update be revisited in Q4? No decision yet.`,
@@ -59,17 +59,17 @@ AC-2: A confirmation dialog shows count and affected field before committing.
 AC-3: Every change is logged in the activity feed with user, timestamp and old/new values.
 AC-4: Undo is available for 60 seconds after commit.
 
-Dependencies: NPLC-88 (audit trail), NPLC-72 (activity feed).`,
+Dependencies: NLPC-88 (audit trail), NLPC-72 (activity feed).`,
   },
   {
     label: 'Ticket',
-    sub: 'NPLC-88 Audit trail',
+    sub: 'NLPC-88 Audit trail',
     icon: '🎫',
     type: 'ticket',
-    title: 'NPLC-88: Add per-field audit trail for bulk contact update',
+    title: 'NLPC-88: Add per-field audit trail for bulk contact update',
     docDate: '2025-08-13',
     author: 'Karan M.',
-    externalRef: 'NPLC-88',
+    externalRef: 'NLPC-88',
     rawText: `Title: Add per-field audit trail for bulk contact update
 Status: IN PROGRESS
 Assignee: Karan M.
@@ -84,7 +84,7 @@ Sub-tasks:
 - [ ] Expose via Activity Feed API
 - [ ] Unit tests (minimum 90% coverage)
 
-Blocked by: NPLC-72 (Activity Feed API)`,
+Blocked by: NLPC-72 (Activity Feed API)`,
   },
 ]
 
@@ -235,7 +235,7 @@ export default function IngestSources() {
                 type="text"
                 value={form.externalRef}
                 onChange={(e) => setForm({ ...form, externalRef: e.target.value })}
-                placeholder="e.g. NPLC-88, REQ-204"
+                placeholder="e.g. NLPC-88, REQ-204"
                 className={`w-full border rounded-xl px-3 py-2.5 text-[16px] focus:outline-none focus:ring-2 transition-colors ${inp} ${dark ? 'bg-[#12121f]' : ''}`}
               />
             </div>

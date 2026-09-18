@@ -273,7 +273,7 @@ function NotesForm({ currentId, status, message, setStatus, setMessage, onAdded,
           <Input
             type="text" value={form.externalRef}
             onChange={(e) => setForm({ ...form, externalRef: e.target.value })}
-            placeholder="e.g. NPLC-88, REQ-204"
+            placeholder="e.g. NLPC-88, REQ-204"
           />
         </div>
 

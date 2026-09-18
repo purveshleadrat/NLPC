@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext'
 // from Jira/GitHub - now lives inside the initiative workspace itself. The sidebar is just
 // the three top-level destinations.
 const links = [
-  { to: '/', label: 'Initiatives', icon: Boxes },
+  { to: '/initiatives', label: 'Initiatives', icon: Boxes },
   { to: '/search', label: 'Global Search', icon: SearchIcon },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
@@ -49,7 +49,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div className="text-[16px] font-black leading-none tracking-tight" style={{ color: dark ? '#ffffff' : '#1e1b4b' }}>
-              NPLC
+              NLPC
             </div>
             <div className="text-[9.5px] font-bold uppercase tracking-[0.18em] gradient-text">
               Hackathon 2K26
@@ -74,7 +74,7 @@ export default function Sidebar() {
       {/* ── Nav links ── */}
       <nav className="flex-1 px-2 py-2 flex flex-col gap-0.5 overflow-y-auto">
         {links.map(({ to, label, icon: Icon }) => (
-          <NavLink key={to} to={to} end={to === '/'}>
+          <NavLink key={to} to={to}>
             {({ isActive }) => (
               <div
                 style={isActive ? {

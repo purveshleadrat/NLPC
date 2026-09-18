@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import Sidebar from './components/Sidebar'
 import Initiatives from './pages/Initiatives'
 import InitiativeWorkspace from './pages/InitiativeWorkspace'
@@ -60,10 +61,13 @@ function Shell() {
       <Sidebar />
       <main className="ml-56 flex-1 p-8 overflow-y-auto" style={{ position: 'relative', zIndex: 1 }}>
         <Routes>
-          <Route path="/" element={<Initiatives />} />
+          <Route path="/initiatives" element={<Initiatives />} />
           <Route path="/workspace" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
           <Route path="/search" element={<GlobalSearch />} />
           <Route path="/settings" element={<RequireInitiative><Settings /></RequireInitiative>} />
+          <Route path="/sign-in" element={<Navigate to="/initiatives" replace />} />
+          <Route path="/sign-up" element={<Navigate to="/initiatives" replace />} />
+          <Route path="*" element={<Navigate to="/initiatives" replace />} />
         </Routes>
       </main>
     </div>
@@ -72,11 +76,22 @@ function Shell() {
 
 function AppContent() {
   const { isAuthed } = useAuth()
-  if (!isAuthed) return <Login />
+  const { dark } = useTheme()
   return (
-    <InitiativeProvider>
-      <Shell />
-    </InitiativeProvider>
+    <>
+      <Toaster theme={dark ? 'dark' : 'light'} position="top-center" richColors closeButton />
+      {isAuthed ? (
+        <InitiativeProvider>
+          <Shell />
+        </InitiativeProvider>
+      ) : (
+        <Routes>
+          <Route path="/sign-in" element={<Login />} />
+          <Route path="/sign-up" element={<Login />} />
+          <Route path="*" element={<Navigate to="/sign-in" replace />} />
+        </Routes>
+      )}
+    </>
   )
 }
 

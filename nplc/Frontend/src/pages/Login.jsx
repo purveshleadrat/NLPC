@@ -1,25 +1,31 @@
-import { useState } from 'react'
-import { Brain, Loader2, LogIn, UserPlus, AlertTriangle, Eye, EyeOff } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useLocation, Link } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { Brain, Loader2, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+
+// Lowercase letters, digits and single internal hyphens, 2-32 chars, no leading/trailing
+// hyphen - matches how the backend normalises and stores the slug.
+const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/i
 
 export default function Login() {
   const { login, signup } = useAuth()
-  const [mode, setMode] = useState('signup')
-  const [tenantName, setTenantName] = useState('')
-  const [tenantSlug, setTenantSlug] = useState('')
-  const [password, setPassword] = useState('')
+  const location = useLocation()
+  const mode = location.pathname === '/sign-up' ? 'signup' : 'login'
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({ mode: 'onBlur' })
 
-  async function submit(e) {
-    e.preventDefault()
-    setError(null); setLoading(true)
+  useEffect(() => { reset() }, [mode, reset])
+
+  async function submit(data) {
+    setLoading(true)
     try {
-      if (mode === 'signup') await signup(tenantName.trim(), tenantSlug.trim(), password)
-      else await login(tenantSlug.trim(), password)
+      if (mode === 'signup') await signup(data.tenantName.trim(), data.tenantSlug.trim(), data.password)
+      else await login(data.tenantSlug.trim(), data.password)
     } catch (err) {
-      setError(err?.response?.data?.message || err?.response?.data?.error || err.message || 'Authentication failed')
+      toast.error(err?.response?.data?.message || 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -113,7 +119,7 @@ export default function Login() {
             <Brain size={24} color="#fff" />
           </div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>NPLC</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>NLPC</div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
               background: 'linear-gradient(90deg,#34d399,#14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Never Lose Product Context
@@ -183,7 +189,7 @@ export default function Login() {
               boxShadow: '0 0 20px rgba(16,185,129,0.5)' }}>
               <Brain size={19} color="#fff" />
             </div>
-            <span style={{ fontSize: 17, fontWeight: 900, color: '#fff' }}>NPLC</span>
+            <span style={{ fontSize: 17, fontWeight: 900, color: '#fff' }}>NLPC</span>
           </div>
 
           <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-0.5px' }}>
@@ -195,15 +201,18 @@ export default function Login() {
               : 'Sign in to your workspace to continue.'}
           </div>
 
-          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleSubmit(submit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {mode === 'signup' && (
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600,
                   color: 'rgba(255,255,255,0.45)', marginBottom: 7, letterSpacing: '0.02em' }}>
                   Workspace name
                 </label>
-                <input className="nplc-input" value={tenantName}
-                  onChange={e => setTenantName(e.target.value)} required placeholder="Acme Product Team" />
+                <input className="nplc-input" placeholder="Acme Product Team"
+                  {...register('tenantName', { required: 'Workspace name is required' })} />
+                {errors.tenantName && (
+                  <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.tenantName.message}</p>
+                )}
               </div>
             )}
 
@@ -212,8 +221,19 @@ export default function Login() {
                 color: 'rgba(255,255,255,0.45)', marginBottom: 7, letterSpacing: '0.02em' }}>
                 Workspace slug
               </label>
-              <input className="nplc-input" value={tenantSlug}
-                onChange={e => setTenantSlug(e.target.value)} required placeholder="acme" autoCapitalize="none" />
+              <input className="nplc-input" placeholder="acme" autoCapitalize="none" autoCorrect="off"
+                {...register('tenantSlug', {
+                  required: 'Workspace slug is required',
+                  pattern: {
+                    value: SLUG_PATTERN,
+                    message: 'Only letters, numbers and single hyphens (e.g. "acme-labs")',
+                  },
+                  minLength: { value: 2, message: 'At least 2 characters' },
+                  maxLength: { value: 32, message: 'At most 32 characters' },
+                })} />
+              {errors.tenantSlug && (
+                <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.tenantSlug.message}</p>
+              )}
             </div>
 
             <div>
@@ -222,29 +242,29 @@ export default function Login() {
                 Password
               </label>
               <div style={{ position: 'relative' }}>
-                <input className="nplc-input" type={showPassword ? 'text' : 'password'} value={password}
-                  onChange={e => setPassword(e.target.value)} required placeholder="••••••••"
-                  minLength={mode === 'signup' ? 8 : undefined}
-                  style={{ paddingRight: 42 }} />
+                <input className="nplc-input" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
+                  style={{ paddingRight: 42 }}
+                  {...register('password', {
+                    required: 'Password is required',
+                    ...(mode === 'signup' ? { minLength: { value: 8, message: 'At least 8 characters' } } : {}),
+                  })} />
                 <button type="button" onClick={() => setShowPassword(v => !v)}
-                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                    color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center' }}>
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 6,
+                    color: 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center',
+                    borderRadius: 6, transition: 'color .15s, background .15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.background = 'none' }}>
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
-              {mode === 'signup' && (
+              {errors.password ? (
+                <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.password.message}</p>
+              ) : mode === 'signup' && (
                 <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 5 }}>At least 8 characters.</p>
               )}
             </div>
-
-            {error && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8,
-                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-                color: '#f87171', borderRadius: 10, padding: '10px 12px', fontSize: 13 }}>
-                <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} /> {error}
-              </div>
-            )}
 
             <button type="submit" disabled={loading} className="nplc-btn" style={{ marginTop: 4 }}>
               {loading
@@ -257,12 +277,12 @@ export default function Login() {
 
           <div style={{ textAlign: 'center', marginTop: 22, fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>
             {mode === 'signup' ? 'Already have a workspace?' : "Don't have a workspace?"}{' '}
-            <button onClick={() => { setMode(mode === 'signup' ? 'login' : 'signup'); setError(null) }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+            <Link to={mode === 'signup' ? '/sign-in' : '/sign-up'}
+              style={{ cursor: 'pointer', fontSize: 13, fontWeight: 700,
                 backgroundImage: 'linear-gradient(90deg,#34d399,#14b8a6)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               {mode === 'signup' ? 'Sign in' : 'Create one'}
-            </button>
+            </Link>
           </div>
         </div>
       </div>
