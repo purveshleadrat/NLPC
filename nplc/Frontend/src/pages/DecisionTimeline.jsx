@@ -17,7 +17,7 @@ const SOURCE_TAG = {
   transcript:      { label: 'Transcript',  icon: MessagesSquare,  dot: '#eab308' },
 }
 
-const CATEGORIES = ['All', 'Decisions', 'Tickets', 'Commits', 'Questions', 'Requirements']
+const CATEGORIES = ['All', 'Tickets', 'Commits']
 
 function categoryOf(item) {
   if (item.kind === 'event') {

@@ -104,7 +104,7 @@ export default function GlobalSearch() {
   const hasResults = results && (results.events?.length > 0 || results.sources?.length > 0)
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div>
         <h2 className={`text-[22px] font-bold ${head}`}>Global Search</h2>
         <p className={`text-[14px] ${muted}`}>Search decisions, sources, and events across every initiative.</p>

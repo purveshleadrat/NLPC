@@ -12,7 +12,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
 const links = [
-  { to: '/', label: 'Initiatives', icon: Boxes, tourId: 'tour-initiatives' },
+  { to: '/initiatives', label: 'Initiatives', icon: Boxes, tourId: 'tour-initiatives' },
   { to: '/search', label: 'Global Search', icon: SearchIcon, tourId: 'tour-search' },
   { to: '/integrations', label: 'Integrations', icon: Plug, tourId: 'tour-integrations' },
   { to: '/settings', label: 'Settings', icon: SettingsIcon, tourId: 'tour-settings' },

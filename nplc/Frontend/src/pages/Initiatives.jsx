@@ -20,7 +20,7 @@ const PRIORITY_META = {
 }
 
 const SORT_OPTIONS = ['Recently updated', 'Name (A–Z)', 'Most tickets']
-const FILTERS = ['All', 'Has open questions', 'Recently changed', 'Pinned']
+const FILTERS = ['All', 'Recently changed', 'Pinned']
 const PINNED_KEY = 'nplc_initiative_pinned'
 
 export default function Initiatives() {
@@ -106,7 +106,6 @@ export default function Initiatives() {
     let list = initiatives.filter(i => {
       if (search && !i.name.toLowerCase().includes(search.toLowerCase())) return false
       if (filter === 'Pinned') return pinned.includes(i.id)
-      if (filter === 'Has open questions') return (summaries[i.id]?.openCount ?? 0) > 0
       if (filter === 'Recently changed') return isRecentlyChanged(i.id)
       return true
     })
@@ -225,7 +224,7 @@ export default function Initiatives() {
               return (
                 <div
                   key={init.id}
-                  onClick={() => { select(init.id); navigate('/workspace') }}
+                  onClick={() => { select(init.id); navigate(`/initiatives/${init.id}`) }}
                   className={`rounded-xl px-[15px] py-[14px] cursor-pointer transition-all group relative ${card}`}
                 >
                   <div className="absolute top-3 right-3 flex items-center gap-1">

@@ -11,7 +11,7 @@ const PROJECT_COLORS = [
 ]
 
 const SORT_OPTIONS = ['Recently updated', 'Name (A–Z)', 'Most tickets', 'Most branches']
-const FILTERS = ['All', 'Has open questions', 'Recently changed', 'Pinned']
+const FILTERS = ['All','Recently changed', 'Pinned']
 
 export default function JiraTickets() {
   const { dark } = useTheme()
@@ -104,7 +104,6 @@ export default function JiraTickets() {
     let list = projects.filter(p => {
       if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !p.key.toLowerCase().includes(search.toLowerCase())) return false
       if (filter === 'Pinned') return pinned.includes(p.key)
-      if (filter === 'Has open questions') return ticketData[p.key]?.hasQuestions
       if (filter === 'Recently changed') return isRecentlyChanged(p.key)
       return true
     })
