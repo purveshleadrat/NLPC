@@ -1,6 +1,9 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+// In dev, Vite proxies /api -> http://localhost:4000 (see vite.config.js), so the
+// relative path works with no env var needed. In a production build there is no dev
+// server to proxy anything, so VITE_API_URL must point at the real deployed backend.
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
 
 // --- Auth token plumbing ------------------------------------------------------
 const TOKEN_KEY = 'nplc_token'
