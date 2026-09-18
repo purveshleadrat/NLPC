@@ -4,6 +4,7 @@ import DecisionTimeline from './DecisionTimeline'
 import ChangeImpact from './ChangeImpact'
 import AskContext from './AskContext'
 import ResumeBrief from './ResumeBrief'
+import SourcesList from './SourcesList'
 
 // All initiative-scoped views live behind one route and swap client-side via tab state,
 // matching the prototype: clicking Timeline/Scope/Ask/Brief never navigates or reloads.
@@ -18,6 +19,7 @@ export default function InitiativeWorkspace() {
       {tab === 'impact' && <ChangeImpact />}
       {tab === 'ask' && <AskContext />}
       {tab === 'brief' && <ResumeBrief />}
+      {tab === 'sources' && <SourcesList />}
     </div>
   )
 }

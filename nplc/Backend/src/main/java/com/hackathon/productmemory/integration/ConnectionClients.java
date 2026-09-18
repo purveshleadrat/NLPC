@@ -54,6 +54,22 @@ public class ConnectionClients {
         cache.remove(connectionId);
     }
 
+    /**
+     * An unauthenticated client against a base URL, with the same timeouts as the rest.
+     * Used for public probes made before a connection exists - e.g. reading a Jira site's
+     * serverInfo to learn its canonical {@code *.atlassian.net} address. Not cached: these
+     * calls are one-shot and carry no credential worth keeping.
+     */
+    public RestClient anonymous(String baseUrl) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout((int) connectTimeout.toMillis());
+        requestFactory.setReadTimeout((int) readTimeout.toMillis());
+        return RestClient.builder()
+                .requestFactory(requestFactory)
+                .baseUrl(baseUrl)
+                .build();
+    }
+
     private RestClient build(IntegrationConnection connection) {
         String secret = cipher.decrypt(connection.getSecretCiphertext());
 

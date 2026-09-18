@@ -6,6 +6,7 @@ import com.hackathon.productmemory.entity.InitiativeConnection;
 import com.hackathon.productmemory.integration.ConnectionCall;
 import com.hackathon.productmemory.integration.ConnectionClients;
 import com.hackathon.productmemory.integration.IntegrationHostPolicy;
+import com.hackathon.productmemory.integration.JiraClient;
 import com.hackathon.productmemory.integration.SecretCipher;
 import com.hackathon.productmemory.repository.InitiativeConnectionRepository;
 import com.hackathon.productmemory.repository.IntegrationConnectionRepository;
@@ -53,17 +54,20 @@ public class IntegrationConnectionService {
     private final SecretCipher cipher;
     private final IntegrationHostPolicy hostPolicy;
     private final ConnectionClients clients;
+    private final JiraClient jiraClient;
 
     public IntegrationConnectionService(IntegrationConnectionRepository connectionRepository,
                                         InitiativeConnectionRepository initiativeConnectionRepository,
                                         SecretCipher cipher,
                                         IntegrationHostPolicy hostPolicy,
-                                        ConnectionClients clients) {
+                                        ConnectionClients clients,
+                                        JiraClient jiraClient) {
         this.connectionRepository = connectionRepository;
         this.initiativeConnectionRepository = initiativeConnectionRepository;
         this.cipher = cipher;
         this.hostPolicy = hostPolicy;
         this.clients = clients;
+        this.jiraClient = jiraClient;
     }
 
     @Transactional
@@ -72,12 +76,20 @@ public class IntegrationConnectionService {
         connection.setId(UUID.randomUUID().toString());
         connection.setProvider(request.provider());
         connection.setLabel(request.label());
-        // Tenant-supplied, so it is checked before this server will ever call it.
-        connection.setBaseUrl(hostPolicy.validate(request.provider(), request.baseUrl()));
+        if (IntegrationConnection.PROVIDER_SMTP.equals(request.provider())) {
+            // SMTP is a mail server host, not an HTTP API - it never goes through the SSRF
+            // allowlist or canonicalisation. The port lives in the otherwise-unused repo column.
+            connection.setBaseUrl(request.baseUrl().trim());
+            connection.setRepo(request.port() == null ? "587" : String.valueOf(request.port()));
+        } else {
+            // Tenant-supplied, so it is checked before this server will ever call it, then
+            // normalised to the canonical API host (see canonicalBaseUrl).
+            connection.setBaseUrl(canonicalBaseUrl(request.provider(), request.baseUrl()));
+            // Empty string rather than null, so the uniqueness constraint still applies:
+            // in Postgres NULLs never conflict with each other.
+            connection.setRepo(request.repo() == null ? "" : request.repo().trim());
+        }
         connection.setAccountId(request.accountId().trim());
-        // Empty string rather than null, so the uniqueness constraint still applies:
-        // in Postgres NULLs never conflict with each other.
-        connection.setRepo(request.repo() == null ? "" : request.repo().trim());
         connection.setSecretCiphertext(cipher.encrypt(request.secret()));
         connection.setKeyVersion(cipher.keyVersion());
         connection.setStatus(IntegrationConnection.STATUS_UNVERIFIED);
@@ -88,6 +100,32 @@ public class IntegrationConnectionService {
         }
 
         return toResponse(connectionRepository.save(connection));
+    }
+
+    /**
+     * Validates a tenant-supplied base URL against the allowlist, then - for Jira - swaps in
+     * the site's canonical {@code *.atlassian.net} address if it differs.
+     *
+     * <p>An org may enter a custom domain that only serves the Jira UI; the REST API must be
+     * called on the canonical host or it returns no data. The canonical URL is re-validated
+     * through the same allowlist (a serverInfo response is untrusted input, so it cannot be
+     * used to point this server at an internal address). Resolution is best-effort: if the
+     * probe fails or the returned URL is not allowed, the validated entry is kept as-is.
+     */
+    private String canonicalBaseUrl(String provider, String rawBaseUrl) {
+        String validated = hostPolicy.validate(provider, rawBaseUrl);
+        if (!IntegrationConnection.PROVIDER_JIRA.equals(provider)) {
+            return validated;
+        }
+        return jiraClient.resolveCanonicalBaseUrl(validated)
+                .flatMap(canonical -> {
+                    try {
+                        return java.util.Optional.of(hostPolicy.validate(provider, canonical));
+                    } catch (RuntimeException notAllowed) {
+                        return java.util.Optional.<String>empty();
+                    }
+                })
+                .orElse(validated);
     }
 
     public List<ConnectionResponse> list() {

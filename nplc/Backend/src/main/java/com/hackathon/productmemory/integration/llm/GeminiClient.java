@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
@@ -69,23 +70,75 @@ public class GeminiClient implements LlmClient {
                         "parts", List.of(Map.of("text", userPrompt)))),
                 "generationConfig", generationConfig);
 
-        JsonNode response;
-        try {
-            response = http.post()
-                    .uri("/models/{model}:generateContent", model)
-                    .header("x-goog-api-key", apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(body)
-                    .retrieve()
-                    .body(JsonNode.class);
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
-                    "LLM request failed: " + e.getMessage());
-        }
+        return extractText(postWithRetry(body));
+    }
 
-        return extractText(response);
+    // The free tier is rate-limited (per-minute and per-day). A 429/503 is often transient -
+    // a short spike or a per-minute window - so retry a few times with backoff, honouring the
+    // server's own retryDelay when it is short. A 429 that persists is surfaced as 429 (not
+    // 502) so callers like extraction can stop cleanly and resume on the next run rather than
+    // failing the whole operation.
+    private JsonNode postWithRetry(Map<String, Object> body) {
+        int maxAttempts = 3;
+        long cappedWaitMillis = 12_000; // never hold a request longer than this per retry
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return http.post()
+                        .uri("/models/{model}:generateContent", model)
+                        .header("x-goog-api-key", apiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(body)
+                        .retrieve()
+                        .body(JsonNode.class);
+            } catch (RestClientResponseException e) {
+                int status = e.getStatusCode().value();
+                if ((status == 429 || status == 503) && attempt < maxAttempts) {
+                    long delay = serverRetryDelayMillis(e);
+                    if (delay < 0 && status == 503) {
+                        delay = 1000L * (1L << (attempt - 1)); // 1s, 2s: transient overload
+                    }
+                    // Only wait if the delay is short. A long per-minute/day window (typical
+                    // of a real quota wall) is not worth holding the request for - fail fast
+                    // so the caller can stop and resume later.
+                    if (delay >= 0 && delay <= cappedWaitMillis) {
+                        sleep(delay);
+                        continue;
+                    }
+                }
+                if (status == 429) {
+                    throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                            "LLM rate limit reached (free tier). Try again shortly.");
+                }
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                        "LLM request failed: " + e.getStatusText());
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                        "LLM request failed: " + e.getMessage());
+            }
+        }
+    }
+
+    /** Google's RetryInfo ("Please retry in 34.5s") in millis, or -1 when not present. */
+    private static long serverRetryDelayMillis(RestClientResponseException e) {
+        try {
+            var m = java.util.regex.Pattern.compile("retry in ([0-9.]+)s")
+                    .matcher(e.getResponseBodyAsString());
+            if (m.find()) {
+                return (long) (Double.parseDouble(m.group(1)) * 1000);
+            }
+        } catch (Exception ignored) {
+            // no parseable delay
+        }
+        return -1;
+    }
+
+    private static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "LLM call interrupted");
+        }
     }
 
     /** Pulls candidates[0].content.parts[*].text out of a Gemini generateContent response. */

@@ -3,10 +3,14 @@ package com.hackathon.productmemory.controller;
 import com.hackathon.productmemory.dto.DecisionDtos.DecisionRequest;
 import com.hackathon.productmemory.dto.ExtractionDtos.ExtractResult;
 import com.hackathon.productmemory.dto.InsightDtos.*;
+import com.hackathon.productmemory.dto.MailDtos.SendMailRequest;
+import com.hackathon.productmemory.dto.MailDtos.SendMailResult;
 import com.hackathon.productmemory.entity.Event;
 import com.hackathon.productmemory.service.DecisionService;
 import com.hackathon.productmemory.service.ExtractionService;
 import com.hackathon.productmemory.service.InsightService;
+import com.hackathon.productmemory.service.MailReportService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +28,16 @@ public class InitiativeInsightController {
     private final ExtractionService extractionService;
     private final InsightService insightService;
     private final DecisionService decisionService;
+    private final MailReportService mailReportService;
 
     public InitiativeInsightController(ExtractionService extractionService,
                                        InsightService insightService,
-                                       DecisionService decisionService) {
+                                       DecisionService decisionService,
+                                       MailReportService mailReportService) {
         this.extractionService = extractionService;
         this.insightService = insightService;
         this.decisionService = decisionService;
+        this.mailReportService = mailReportService;
     }
 
     // POST /initiatives/{id}/extract — run extraction on every not-yet-extracted source
@@ -62,5 +69,13 @@ public class InitiativeInsightController {
     @ResponseStatus(HttpStatus.CREATED)
     public Event addDecision(@PathVariable String id, @RequestBody DecisionRequest request) {
         return decisionService.addDecision(id, request);
+    }
+
+    // POST /initiatives/{id}/send-mail  body: { "to": ["a@b.com", ...] }
+    // Emails an AI-written progress update (or release note, if the parent ticket is
+    // released) over the tenant's SMTP connection.
+    @PostMapping("/send-mail")
+    public SendMailResult sendMail(@PathVariable String id, @Valid @RequestBody SendMailRequest request) {
+        return mailReportService.send(id, request.to());
     }
 }

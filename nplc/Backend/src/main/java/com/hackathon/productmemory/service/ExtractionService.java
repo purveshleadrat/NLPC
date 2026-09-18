@@ -142,15 +142,28 @@ public class ExtractionService {
             known.put(e.getId(), e);
         }
 
-        int events = 0, constraints = 0, contradictions = 0, superseded = 0;
+        int events = 0, constraints = 0, contradictions = 0, superseded = 0, processed = 0;
         for (Source source : pending) {
-            Counters c = extractSource(source, known);
-            events += c.events;
-            constraints += c.constraints;
-            contradictions += c.contradictions;
-            superseded += c.superseded;
+            try {
+                Counters c = extractSource(source, known);
+                events += c.events;
+                constraints += c.constraints;
+                contradictions += c.contradictions;
+                superseded += c.superseded;
+                processed++;
+            } catch (ResponseStatusException e) {
+                // Free-tier rate limit: keep what we have and stop. Sources without events
+                // stay pending, so a later extract/sync picks up exactly where this left off.
+                // Not rethrown, so the sources processed above are still committed.
+                if (e.getStatusCode().value() == HttpStatus.TOO_MANY_REQUESTS.value()) {
+                    break;
+                }
+                throw e;
+            }
         }
-        return new ExtractResult(pending.size(), events, constraints, contradictions, superseded);
+        // sourcesProcessed reflects what was actually extracted, not what was queued, so a
+        // partial run (rate-limited) reports honestly.
+        return new ExtractResult(processed, events, constraints, contradictions, superseded);
     }
 
     private Counters extractSource(Source source, Map<String, Event> known) {

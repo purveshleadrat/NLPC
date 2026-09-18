@@ -35,6 +35,10 @@ public class Source {
     private String author;
     private String externalRef;
 
+    // Key of the parent issue (e.g. a Jira subtask's parent), when this source was imported
+    // as a child. Null for standalone sources.
+    private String parentRef;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 }

@@ -239,7 +239,7 @@ export default function Initiatives() {
               return (
                 <div
                   key={init.id}
-                  onClick={() => { if (!isRenaming) { select(init.id); navigate('/') } }}
+                  onClick={() => { if (!isRenaming) { select(init.id); navigate('/workspace') } }}
                   className={`rounded-xl px-[15px] py-[14px] cursor-pointer transition-all group relative ${card}`}
                 >
                   <div className="absolute top-3 right-3 flex items-center gap-1">

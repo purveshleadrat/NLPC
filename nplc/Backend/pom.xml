@@ -90,6 +90,13 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- SMTP sending. Jakarta Mail directly (API + Angus implementation) rather than
+         spring-boot-starter-mail, whose 3.3.x artifact is not in the local repo. -->
+    <dependency>
+      <groupId>org.eclipse.angus</groupId>
+      <artifactId>angus-mail</artifactId>
+      <version>2.0.5</version>
+    </dependency>
   </dependencies>
 
   <build>

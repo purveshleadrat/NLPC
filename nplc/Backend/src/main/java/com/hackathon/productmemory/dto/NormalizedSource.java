@@ -17,4 +17,5 @@ public class NormalizedSource {
     private String docDate;
     private String author;
     private String externalRef;
+    private String parentRef;
 }
