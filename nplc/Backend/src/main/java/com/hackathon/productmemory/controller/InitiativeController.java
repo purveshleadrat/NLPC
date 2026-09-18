@@ -44,10 +44,10 @@ public class InitiativeController {
         return initiativeService.getById(id);
     }
 
-    // PUT /initiatives/{id}  body: { "name": "..." } — rename
+    // PUT /initiatives/{id}  body: { "name": "...", "description": "...", "priority": "LOW"|"MEDIUM"|"HIGH" }
     @PutMapping("/{id}")
-    public Initiative rename(@PathVariable String id, @RequestBody Initiative body) {
-        return initiativeService.rename(id, body.getName());
+    public Initiative update(@PathVariable String id, @RequestBody Initiative body) {
+        return initiativeService.update(id, body);
     }
 
     // DELETE /initiatives/{id} — removes the initiative and everything scoped to it

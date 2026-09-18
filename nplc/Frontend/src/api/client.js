@@ -48,8 +48,11 @@ export const signup = (tenantName, tenantSlug, password) =>
 // --- Initiatives --------------------------------------------------------------
 export const getInitiatives   = () => api.get('/initiatives')
 export const getInitiative    = (id) => api.get(`/initiatives/${id}`)
-export const createInitiative = (name) => api.post('/initiatives', { name })
+export const createInitiative = (name, description, priority) =>
+  api.post('/initiatives', { name, description, priority })
 export const renameInitiative = (id, name) => api.put(`/initiatives/${id}`, { name })
+export const updateInitiative = (id, { name, description, priority }) =>
+  api.put(`/initiatives/${id}`, { name, description, priority })
 export const deleteInitiative = (id) => api.delete(`/initiatives/${id}`)
 
 // --- Connections (tenant-owned Jira/GitHub accounts) --------------------------

@@ -11,6 +11,12 @@ const PROJECT_COLORS = [
   '#ec4899', '#14b8a6', '#eab308', '#ef4444', '#10b981', '#0ea5e9',
 ]
 
+const PRIORITY_META = {
+  HIGH: { label: 'High', dot: '#f87171', text: 'text-red-400' },
+  MEDIUM: { label: 'Medium', dot: '#fbbf24', text: 'text-amber-400' },
+  LOW: { label: 'Low', dot: '#60a5fa', text: 'text-blue-400' },
+}
+
 const SORT_OPTIONS = ['Recently updated', 'Name (A–Z)', 'Most tickets']
 const FILTERS = ['All', 'Has open questions', 'Recently changed', 'Pinned']
 const PINNED_KEY = 'nplc_initiative_pinned'
@@ -239,7 +245,7 @@ export default function Initiatives() {
               return (
                 <div
                   key={init.id}
-                  onClick={() => { if (!isRenaming) { select(init.id); navigate('/workspace') } }}
+                  onClick={() => { if (!isRenaming) { select(init.id); navigate(`/initiatives/${init.id}`) } }}
                   className={`rounded-xl px-[15px] py-[14px] cursor-pointer transition-all group relative ${card}`}
                 >
                   <div className="absolute top-3 right-3 flex items-center gap-1">
@@ -305,6 +311,21 @@ export default function Initiatives() {
                       <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
                     )}
                   </div>
+
+                  {init.priority && PRIORITY_META[init.priority] && (
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: PRIORITY_META[init.priority].dot }} />
+                      <span className={`text-[10.5px] font-semibold uppercase tracking-wide ${PRIORITY_META[init.priority].text}`}>
+                        {PRIORITY_META[init.priority].label} priority
+                      </span>
+                    </div>
+                  )}
+
+                  {init.description && (
+                    <p className={`text-[12px] mb-2 line-clamp-2 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {init.description}
+                    </p>
+                  )}
 
                   <p className={`text-[11.5px] mb-2.5 ${muted}`}>
                     {s.scopeLabel || 'No connections'}{updated && <> · updated {updated}</>}

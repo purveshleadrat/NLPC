@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import Sidebar from './components/Sidebar'
 import Initiatives from './pages/Initiatives'
@@ -10,14 +10,24 @@ import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { InitiativeProvider, useInitiative } from './context/InitiativeContext'
 import { FolderPlus, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import NewInitiativeModal from './components/NewInitiativeModal'
 
-// Pages that read/write the decision graph need an initiative selected first.
+// Pages that read/write the decision graph need an initiative selected first. On
+// /initiatives/:id this also reconciles the URL's id into context.currentId - the source
+// of truth for every child (InitiativeHeader, DecisionTimeline, ...) - so a direct visit or
+// refresh selects the right initiative instead of relying on whatever was clicked last.
 function RequireInitiative({ children }) {
   const { dark } = useTheme()
-  const { currentId, loading } = useInitiative()
+  const { id: idFromRoute } = useParams()
+  const { currentId, initiatives, loading, select } = useInitiative()
   const [showModal, setShowModal] = useState(false)
+
+  const routeIdIsValid = !idFromRoute || initiatives.some(i => i.id === idFromRoute)
+
+  useEffect(() => {
+    if (idFromRoute && routeIdIsValid && idFromRoute !== currentId) select(idFromRoute)
+  }, [idFromRoute, routeIdIsValid, currentId, select])
 
   if (loading) {
     return (
@@ -25,6 +35,9 @@ function RequireInitiative({ children }) {
         <Loader2 size={22} className="animate-spin mr-2" /> Loading initiatives…
       </div>
     )
+  }
+  if (idFromRoute && !routeIdIsValid) {
+    return <Navigate to="/initiatives" replace />
   }
   if (!currentId) {
     return (
@@ -62,7 +75,7 @@ function Shell() {
       <main className="ml-56 flex-1 p-8 overflow-y-auto" style={{ position: 'relative', zIndex: 1 }}>
         <Routes>
           <Route path="/initiatives" element={<Initiatives />} />
-          <Route path="/workspace" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
+          <Route path="/initiatives/:id" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
           <Route path="/search" element={<GlobalSearch />} />
           <Route path="/settings" element={<RequireInitiative><Settings /></RequireInitiative>} />
           <Route path="/sign-in" element={<Navigate to="/initiatives" replace />} />

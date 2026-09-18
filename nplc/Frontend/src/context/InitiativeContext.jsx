@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { getInitiatives, createInitiative, renameInitiative, deleteInitiative } from '../api/client'
+import { getInitiatives, createInitiative, renameInitiative, updateInitiative, deleteInitiative } from '../api/client'
 import { useAuth } from './AuthContext'
 
 const InitiativeContext = createContext(null)
@@ -53,8 +53,8 @@ export function InitiativeProvider({ children }) {
     else { setInitiatives([]); setCurrentId(null) }
   }, [isAuthed, refresh])
 
-  async function create(name) {
-    const res = await createInitiative(name)
+  async function create(name, description, priority) {
+    const res = await createInitiative(name, description, priority)
     await refresh()
     select(res.data.id)
     return res.data
@@ -62,6 +62,11 @@ export function InitiativeProvider({ children }) {
 
   async function rename(id, name) {
     await renameInitiative(id, name)
+    await refresh()
+  }
+
+  async function update(id, changes) {
+    await updateInitiative(id, changes)
     await refresh()
   }
 
@@ -75,7 +80,7 @@ export function InitiativeProvider({ children }) {
 
   return (
     <InitiativeContext.Provider
-      value={{ initiatives, currentId, current, loading, error, select, refresh, create, rename, remove }}
+      value={{ initiatives, currentId, current, loading, error, select, refresh, create, rename, update, remove }}
     >
       {children}
     </InitiativeContext.Provider>
