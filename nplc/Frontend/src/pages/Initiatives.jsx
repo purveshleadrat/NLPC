@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { LoadingScreen } from '../App'
 import { useNavigate } from 'react-router-dom'
-import { Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Eye, Trash2, Check, X } from 'lucide-react'
+import { Search, Star, ChevronDown, ChevronLeft, ChevronRight, Plus, GitCommitHorizontal, Ticket, Pencil, Eye, Trash2, Check, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
-import { getInitiativeConnections, getConnections, getSources, getEvents } from '../api/client'
+import { getInitiativesList } from '../api/client'
 import NewInitiativeModal from '../components/NewInitiativeModal'
 import EditInitiativeSheet from '../components/EditInitiativeSheet'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select'
 
 const PROJECT_COLORS = [
   '#22c55e', '#3b82f6', '#a855f7', '#f97316',
@@ -19,68 +20,80 @@ const PRIORITY_META = {
   LOW: { label: 'Low', dot: '#60a5fa', text: 'text-blue-400' },
 }
 
-const SORT_OPTIONS = ['Recently updated', 'Name (A–Z)', 'Most tickets']
+const SORT_OPTIONS = [
+  { label: 'Recently updated', value: 'updated_desc' },
+  { label: 'Name (A–Z)', value: 'name_asc' },
+  { label: 'Most tickets', value: 'most_tickets' },
+]
 const FILTERS = ['All', 'Recently changed', 'Pinned']
 const PINNED_KEY = 'nplc_initiative_pinned'
+const PAGE_SIZE_OPTIONS = [6, 12, 24, 48]
+const CHANGED_WINDOW_MS = 14 * 24 * 60 * 60 * 1000
 
 export default function Initiatives() {
   const { dark } = useTheme()
   const navigate = useNavigate()
-  const { initiatives, loading: initiativesLoading, select, remove } = useInitiative()
+  const { select, remove } = useInitiative()
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
-  const [summaries, setSummaries] = useState({}) // { [id]: { scopeLabel, ticketCount, commitCount, openCount, lastUpdated } }
-  const [loadingSummaries, setLoadingSummaries] = useState(true)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filter, setFilter] = useState('All')
-  const [sort, setSort] = useState('Recently updated')
+  const [sort, setSort] = useState(SORT_OPTIONS[0])
   const [showSort, setShowSort] = useState(false)
   const [showNewModal, setShowNewModal] = useState(false)
   const [editingInitiative, setEditingInitiative] = useState(null)
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1])
+  const [data, setData] = useState({ content: [], totalElements: 0, totalPages: 0 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [pinned, setPinned] = useState(() => {
     try { return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]') } catch { return [] }
   })
+  const debounceRef = useRef(null)
 
-  const loadSummaries = useCallback(async () => {
-    if (initiatives.length === 0) { setLoadingSummaries(false); return }
-    setLoadingSummaries(true)
-    const conns = await getConnections().then(r => r.data || []).catch(() => [])
+  // Debounced so every keystroke doesn't fire a request.
+  useEffect(() => {
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 350)
+    return () => clearTimeout(debounceRef.current)
+  }, [search])
 
-    const entries = await Promise.all(initiatives.map(async (init) => {
-      try {
-        const [bindingsRes, sourcesRes, eventsRes] = await Promise.all([
-          getInitiativeConnections(init.id).catch(() => ({ data: [] })),
-          getSources(init.id).catch(() => ({ data: [] })),
-          getEvents(init.id).catch(() => ({ data: [] })),
-        ])
-        const bindings = bindingsRes.data || []
-        const sources = sourcesRes.data || []
-        const events = eventsRes.data || []
+  // Any filter/search/sort/page-size change starts back at page 0 - staying on page 4 of a
+  // now-shorter result set would just show an empty page.
+  useEffect(() => { setPage(0) }, [debouncedSearch, filter, sort, pageSize])
 
-        const scopeLabel = bindings.map(b => {
-          const c = conns.find(x => x.id === b.connectionId)
-          if (!c) return null
-          return c.provider === 'JIRA' ? (b.scopeKey || c.label) : `${c.accountId}/${c.repo}`
-        }).filter(Boolean).join(' · ')
+  const load = useCallback(() => {
+    // Nothing pinned yet - skip the request entirely rather than let an empty ids list
+    // collapse into "no ids filter" server-side and show everything.
+    if (filter === 'Pinned' && pinned.length === 0) {
+      setData({ content: [], totalElements: 0, totalPages: 0 })
+      setLoading(false)
+      return
+    }
+    setLoading(true); setError(null)
+    getInitiativesList({
+      page,
+      size: pageSize,
+      sort: sort.value,
+      search: debouncedSearch,
+      filter: filter === 'Recently changed' ? 'changed' : undefined,
+      ids: filter === 'Pinned' ? pinned : undefined,
+    })
+      .then(res => setData(res.data))
+      .catch(err => setError(err?.response?.data?.message || err.message))
+      .finally(() => setLoading(false))
+  }, [page, pageSize, sort, debouncedSearch, filter, pinned])
 
-        const ticketCount = sources.filter(s => s.type === 'ticket').length
-        const commitCount = sources.filter(s => s.type === 'commit').length
-        const openCount = events.filter(e => e.eventType === 'OPEN_QUESTION' && e.status === 'UNRESOLVED').length
-        const dates = [...sources.map(s => s.createdAt), ...events.map(e => e.createdAt), init.createdAt].filter(Boolean)
-        const lastUpdated = dates.sort().at(-1) || init.createdAt
-
-        return [init.id, { scopeLabel, ticketCount, commitCount, openCount, lastUpdated }]
-      } catch {
-        return [init.id, { scopeLabel: '', ticketCount: 0, commitCount: 0, openCount: 0, lastUpdated: init.createdAt }]
-      }
-    }))
-    setSummaries(Object.fromEntries(entries))
-    setLoadingSummaries(false)
-  }, [initiatives])
-
-  useEffect(() => { loadSummaries() }, [loadSummaries])
+  useEffect(() => { load() }, [load])
 
   async function confirmDelete(id) {
-    try { await remove(id) } finally { setConfirmDeleteId(null) }
+    try {
+      await remove(id)
+      load()
+    } finally {
+      setConfirmDeleteId(null)
+    }
   }
 
   function togglePin(id) {
@@ -91,10 +104,9 @@ export default function Initiatives() {
     })
   }
 
-  function isRecentlyChanged(id) {
-    const d = summaries[id]?.lastUpdated
-    if (!d) return false
-    return (Date.now() - new Date(d).getTime()) < 14 * 24 * 60 * 60 * 1000
+  function isRecentlyChanged(lastUpdated) {
+    if (!lastUpdated) return false
+    return (Date.now() - new Date(lastUpdated).getTime()) < CHANGED_WINDOW_MS
   }
 
   function relativeDate(dateStr) {
@@ -102,28 +114,8 @@ export default function Initiatives() {
     return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
   }
 
-  const processed = useMemo(() => {
-    let list = initiatives.filter(i => {
-      if (search && !i.name.toLowerCase().includes(search.toLowerCase())) return false
-      if (filter === 'Pinned') return pinned.includes(i.id)
-      if (filter === 'Recently changed') return isRecentlyChanged(i.id)
-      return true
-    })
-
-    return [...list].sort((a, b) => {
-      if (sort === 'Name (A–Z)') return a.name.localeCompare(b.name)
-      if (sort === 'Most tickets') return (summaries[b.id]?.ticketCount ?? 0) - (summaries[a.id]?.ticketCount ?? 0)
-      const ap = pinned.includes(a.id) ? 0 : 1
-      const bp = pinned.includes(b.id) ? 0 : 1
-      if (ap !== bp) return ap - bp
-      const ad = summaries[a.id]?.lastUpdated ?? ''
-      const bd = summaries[b.id]?.lastUpdated ?? ''
-      return bd.localeCompare(ad)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initiatives, summaries, search, filter, sort, pinned])
-
-  const loading = initiativesLoading || loadingSummaries
+  const items = data.content || []
+  const totalPages = data.totalPages || 0
 
   const card = dark ? 'bg-white/[0.03] border border-white/[0.07] hover:border-emerald-400/40' : 'bg-white border border-gray-200 hover:border-emerald-300'
   const title = dark ? 'text-gray-100' : 'text-gray-900'
@@ -133,26 +125,23 @@ export default function Initiatives() {
     : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
 
   return (
-    <div>
-      <div className="mb-2 flex items-start justify-between">
+    <div className="min-h-full flex flex-col">
+      <div className="mb-5 flex items-start justify-between">
         <div>
-          <h2 className={`text-[18px] font-bold tracking-[-0.3px] ${title}`}>Initiatives</h2>
-          <p className={`text-[12px] ${muted}`}>{initiatives.length} initiatives</p>
+          <h2 className={`text-[19px] font-bold tracking-[-0.3px] mb-[3px] ${title}`}>
+            Initiatives <span className={`font-normal text-[13px] ${muted}`}>· {data.totalElements}</span>
+          </h2>
+          <p className={`text-[13.5px] max-w-[66ch] ${muted}`}>
+            Search, filter and sort — built to stay usable whether your team owns three initiatives or
+            three hundred. Click one to open its memory.
+          </p>
         </div>
         <button
           onClick={() => setShowNewModal(true)}
-          className="btn-prototype-primary cursor-pointer"
+          className="btn-prototype-primary cursor-pointer flex-shrink-0"
         >
           <Plus size={12} /> New initiative
         </button>
-      </div>
-
-      <div className="mb-4 mt-5">
-        <h3 className={`text-[19px] font-bold mb-[3px] tracking-[-0.3px] ${title}`}>All initiatives</h3>
-        <p className={`text-[13.5px] max-w-[66ch] ${muted}`}>
-          Search, filter and sort — built to stay usable whether your team owns three initiatives or
-          three hundred. Click one to open its memory.
-        </p>
       </div>
 
       <div className="flex items-center gap-2 mb-5 flex-wrap">
@@ -182,17 +171,17 @@ export default function Initiatives() {
             onClick={() => setShowSort(s => !s)}
             className="btn-prototype-tab flex items-center gap-1.5 cursor-pointer"
           >
-            Sort: {sort}<ChevronDown size={11} />
+            Sort: {sort.label}<ChevronDown size={11} />
           </button>
           {showSort && (
             <div className={`absolute right-0 top-full mt-1 rounded-[7px] shadow-lg z-10 min-w-[160px] py-1 border ${dark ? 'bg-[#15151f] border-white/10' : 'bg-white border-gray-200'}`}>
               {SORT_OPTIONS.map(o => (
                 <button
-                  key={o}
+                  key={o.value}
                   onClick={() => { setSort(o); setShowSort(false) }}
-                  className={`w-full text-left px-3 py-1.5 text-[12px] font-medium cursor-pointer ${sort === o ? 'text-blue-400' : dark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
+                  className={`w-full text-left px-3 py-1.5 text-[12px] font-medium cursor-pointer ${sort.value === o.value ? 'text-blue-400' : dark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
                 >
-                  {o}
+                  {o.label}
                 </button>
               ))}
             </div>
@@ -202,21 +191,25 @@ export default function Initiatives() {
 
       {loading && <LoadingScreen dark={dark} />}
 
-      {!loading && processed.length === 0 && (
+      {error && !loading && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 text-[13px] mb-4">
+          Failed to load: {error}
+        </div>
+      )}
+
+      {!loading && !error && items.length === 0 && (
         <div className={`text-center py-20 border-2 border-dashed rounded-xl text-[13px] ${dark ? 'border-white/10 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
           No initiatives found.
         </div>
       )}
 
-      {!loading && processed.length > 0 && (
+      {!loading && !error && items.length > 0 && (
         <>
-          <p className={`text-[12px] mb-3 ${muted}`}>{processed.length} initiatives</p>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))' }}>
-            {processed.map((init, i) => {
-              const s = summaries[init.id] || {}
+            {items.map((init, i) => {
               const isPinned = pinned.includes(init.id)
-              const changed = isRecentlyChanged(init.id)
-              const updated = relativeDate(s.lastUpdated)
+              const changed = isRecentlyChanged(init.lastUpdated)
+              const updated = relativeDate(init.lastUpdated)
               const color = PROJECT_COLORS[i % PROJECT_COLORS.length]
 
               const isConfirmingDelete = confirmDeleteId === init.id
@@ -233,16 +226,16 @@ export default function Initiatives() {
                         <button
                           onClick={e => { e.stopPropagation(); confirmDelete(init.id) }}
                           title="Confirm delete"
-                          className="text-red-400 hover:text-red-300 transition-colors"
+                          className="p-1.5 rounded-lg cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                         >
-                          <Check size={13} />
+                          <Check size={16} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
                           title="Cancel"
-                          className={dark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
+                          className={`p-1.5 rounded-lg cursor-pointer transition-colors ${dark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                         >
-                          <X size={13} />
+                          <X size={16} />
                         </button>
                       </>
                     ) : (
@@ -250,37 +243,38 @@ export default function Initiatives() {
                         <button
                           onClick={e => { e.stopPropagation(); setEditingInitiative(init) }}
                           title="Edit"
-                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
+                          className={`p-1.5 rounded-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200 hover:bg-white/5' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
                         >
-                          <Pencil size={12} />
+                          <Pencil size={15} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); select(init.id); navigate(`/initiatives/${init.id}`) }}
                           title="View"
-                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
+                          className={`p-1.5 rounded-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200 hover:bg-white/5' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
                         >
-                          <Eye size={12} />
+                          <Eye size={15} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteId(init.id) }}
                           title="Delete"
-                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+                          className={`p-1.5 rounded-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={15} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); togglePin(init.id) }}
-                          className={`transition-colors ${isPinned ? 'text-yellow-400' : dark ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
+                          title={isPinned ? 'Unpin' : 'Pin'}
+                          className={`p-1.5 rounded-lg cursor-pointer transition-colors ${isPinned ? 'text-yellow-400 hover:bg-yellow-400/10' : dark ? 'text-gray-600 hover:text-yellow-400 hover:bg-white/5' : 'text-gray-300 hover:text-yellow-400 hover:bg-gray-100'}`}
                         >
-                          <Star size={13} fill={isPinned ? 'currentColor' : 'none'} />
+                          <Star size={15} fill={isPinned ? 'currentColor' : 'none'} />
                         </button>
                       </>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-[9px] mb-2 pr-16">
+                  <div className="flex items-center gap-[9px] mb-2 pr-28">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                    <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
+                    <p title={init.name} className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
                   </div>
 
                   {init.priority && PRIORITY_META[init.priority] && (
@@ -299,16 +293,16 @@ export default function Initiatives() {
                   )}
 
                   <p className={`text-[11.5px] mb-2.5 ${muted}`}>
-                    {s.scopeLabel || 'No connections'}{updated && <> · updated {updated}</>}
+                    {init.scopeLabel || 'No connections'}{updated && <> · updated {updated}</>}
                   </p>
 
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[5px] border ${dark ? 'bg-white/[0.03] border-white/10 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                      <Ticket size={10} className="opacity-70" />{s.ticketCount ?? 0} tickets
+                      <Ticket size={10} className="opacity-70" />{init.ticketCount ?? 0} tickets
                     </span>
-                    {s.commitCount > 0 && (
+                    {init.commitCount > 0 && (
                       <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[5px] border ${dark ? 'bg-white/[0.03] border-white/10 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                        <GitCommitHorizontal size={10} className="opacity-70" />{s.commitCount} commits
+                        <GitCommitHorizontal size={10} className="opacity-70" />{init.commitCount} commits
                       </span>
                     )}
                     {changed && (
@@ -316,9 +310,9 @@ export default function Initiatives() {
                         changed
                       </span>
                     )}
-                    {s.openCount > 0 && (
+                    {init.openCount > 0 && (
                       <span className="badge-prototype badge-open">
-                        {s.openCount} open
+                        {init.openCount} open
                       </span>
                     )}
                   </div>
@@ -326,12 +320,48 @@ export default function Initiatives() {
               )
             })}
           </div>
+
+          {
+            <div className="flex items-center justify-end gap-3 mt-auto pt-6">
+              <span className={`text-[12px] ${muted}`}>
+                Showing {page * pageSize + 1}–{page * pageSize + items.length} of {data.totalElements}
+              </span>
+              <div className={`flex items-center gap-1.5 text-[12px] ${muted}`}>
+                Per page
+                <Select value={String(pageSize)} onValueChange={v => setPageSize(Number(v))}>
+                  <SelectTrigger className="h-7 w-[68px] px-2 py-1 text-[12px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map(n => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <button
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="btn-prototype-tab flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={12} /> Prev
+              </button>
+              <span className={`text-[12px] ${muted}`}>Page {page + 1} of {Math.max(totalPages, 1)}</span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+                className="btn-prototype-tab flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next <ChevronRight size={12} />
+              </button>
+            </div>
+          }
         </>
       )}
 
-      {showNewModal && <NewInitiativeModal onClose={() => setShowNewModal(false)} />}
+      {showNewModal && <NewInitiativeModal onClose={() => { setShowNewModal(false); load() }} />}
       {editingInitiative && (
-        <EditInitiativeSheet initiative={editingInitiative} onClose={() => setEditingInitiative(null)} />
+        <EditInitiativeSheet initiative={editingInitiative} onClose={() => { setEditingInitiative(null); load() }} />
       )}
     </div>
   )

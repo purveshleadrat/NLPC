@@ -47,6 +47,11 @@ export const signup = (tenantName, tenantSlug, password) =>
 
 // --- Initiatives --------------------------------------------------------------
 export const getInitiatives   = () => api.get('/initiatives')
+// One aggregate call for the list page's cards instead of 1 + 3N per-initiative fan-out.
+// ids (comma-separated) bypasses page/size/search/filter to fetch a specific set - used by
+// the Pinned tab, since pinned initiatives can span several pages of the default ordering.
+export const getInitiativesList = ({ page = 0, size = 20, sort = 'updated_desc', search, filter, ids } = {}) =>
+  api.get('/initiatives/list', { params: { page, size, sort, search: search || undefined, filter: filter || undefined, ids: ids?.length ? ids.join(',') : undefined } })
 export const getInitiative    = (id) => api.get(`/initiatives/${id}`)
 export const createInitiative = (name, description, priority) =>
   api.post('/initiatives', { name, description, priority })

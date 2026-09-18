@@ -104,9 +104,9 @@ function Shell() {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-[220px] min-w-0 overflow-y-auto relative">
+      <main className="flex-1 lg:ml-[220px] min-w-0 relative flex flex-col h-screen">
         {/* Mobile topbar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 sticky top-0 z-30"
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 flex-shrink-0"
           style={{ background: dark ? '#0a0f0d' : '#f3f4f6', borderBottom: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e5e7eb' }}>
           <button onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-gray-200 transition-colors">
             <Menu size={20} />
@@ -114,7 +114,7 @@ function Shell() {
           <span className="text-[15px] font-bold" style={{ color: dark ? '#fff' : '#064e3b' }}>NPLC</span>
         </div>
 
-        <div className="nplc-content p-4 sm:p-6 lg:p-8">
+        <div className="nplc-content p-4 sm:p-6 lg:p-8 flex-1 min-h-0 overflow-y-auto">
           <Routes>
             <Route path="/initiatives" element={<Initiatives />} />
             <Route path="/initiatives/:id" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />

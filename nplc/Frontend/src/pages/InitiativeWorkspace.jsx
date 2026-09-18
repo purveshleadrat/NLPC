@@ -13,10 +13,12 @@ export default function InitiativeWorkspace() {
   const onChanged = () => setRefreshTick(t => t + 1)
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <InitiativeHeader activeTab={tab} onTabChange={setTab} onChanged={onChanged} />
-      {tab === 'timeline' && <DecisionTimeline refreshTick={refreshTick} />}
-      {tab === 'ask' && <AskContext />}
+      <div className="flex-1 min-h-0">
+        {tab === 'timeline' && <DecisionTimeline refreshTick={refreshTick} />}
+        {tab === 'ask' && <AskContext />}
+      </div>
     </div>
   )
 }

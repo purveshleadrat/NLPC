@@ -6,7 +6,7 @@ import {
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
 import {
-  Plug, Plus, Trash2, Loader2, AlertTriangle, CheckCircle, Boxes, Ticket, Mail,
+  Plug, Plus, Trash2, Loader2, AlertTriangle, CheckCircle, Boxes, Ticket, Mail, Check, X,
 } from 'lucide-react'
 
 const BLANK = {
@@ -30,6 +30,8 @@ export default function Integrations() {
   const [error, setError] = useState(null)
   const [form, setForm] = useState(BLANK.JIRA)
   const [saving, setSaving] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [removingId, setRemovingId] = useState(null)
 
   const card  = dark ? 'glass-dark' : 'glass-light shadow-sm'
   const label = dark ? 'text-emerald-400' : 'text-emerald-700'
@@ -78,9 +80,10 @@ export default function Integrations() {
   }
 
   async function removeConnection(id) {
-    if (!window.confirm('Delete this connection? Its stored token is destroyed.')) return
+    setRemovingId(id)
     try { await deleteConnection(id); await load() }
     catch (err) { setError(err?.response?.data?.message || err.message) }
+    finally { setRemovingId(null); setConfirmDeleteId(null) }
   }
 
   return (
@@ -135,10 +138,23 @@ export default function Integrations() {
                         : <Boxes size={15} className={dark ? 'text-gray-200 flex-shrink-0' : 'text-gray-700 flex-shrink-0'} />}
                     <span className={`text-[13px] font-semibold flex-1 truncate ${head}`}>{c.label}</span>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button onClick={() => removeConnection(c.id)}
-                        className={`p-1.5 rounded-lg transition-colors ${dark ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}>
-                        <Trash2 size={13} />
-                      </button>
+                      {confirmDeleteId === c.id ? (
+                        <>
+                          <button onClick={() => removeConnection(c.id)} disabled={removingId === c.id} title="Confirm delete — its stored token is destroyed"
+                            className="p-2 rounded-lg cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            {removingId === c.id ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                          </button>
+                          <button onClick={() => setConfirmDeleteId(null)} disabled={removingId === c.id} title="Cancel"
+                            className={`p-2 rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${dark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}>
+                            <X size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        <button onClick={() => setConfirmDeleteId(c.id)} title="Delete"
+                          className={`p-2 rounded-lg cursor-pointer transition-colors ${dark ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}>
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   {/* Sub row: url + status */}
