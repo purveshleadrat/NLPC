@@ -9,10 +9,6 @@ import NewInitiativeModal from '../components/NewInitiativeModal'
 import EditInitiativeSheet from '../components/EditInitiativeSheet'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select'
 
-const PROJECT_COLORS = [
-  '#22c55e', '#3b82f6', '#a855f7', '#f97316',
-  '#ec4899', '#14b8a6', '#eab308', '#ef4444', '#10b981', '#0ea5e9',
-]
 
 const PRIORITY_META = {
   HIGH: { label: 'High', dot: '#f87171', text: 'text-red-400' },
@@ -206,10 +202,11 @@ export default function Initiatives() {
       {!loading && !error && items.length > 0 && (
         <>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))' }}>
-            {items.map((init, i) => {
+            {processed.map((init, i) => {
+              const s = summaries[init.id] || {}
               const isPinned = pinned.includes(init.id)
-              const changed = isRecentlyChanged(init.lastUpdated)
-              const updated = relativeDate(init.lastUpdated)
+              const changed = isRecentlyChanged(init.id)
+              const updated = relativeDate(s.lastUpdated)
               const color = PROJECT_COLORS[i % PROJECT_COLORS.length]
 
               const isConfirmingDelete = confirmDeleteId === init.id
@@ -226,14 +223,14 @@ export default function Initiatives() {
                         <button
                           onClick={e => { e.stopPropagation(); confirmDelete(init.id) }}
                           title="Confirm delete"
-                          className="p-1.5 rounded-lg cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                          className="text-red-400 hover:text-red-300 transition-colors"
                         >
                           <Check size={16} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
                           title="Cancel"
-                          className={`p-1.5 rounded-lg cursor-pointer transition-colors ${dark ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                          className={dark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
                         >
                           <X size={16} />
                         </button>
@@ -243,28 +240,27 @@ export default function Initiatives() {
                         <button
                           onClick={e => { e.stopPropagation(); setEditingInitiative(init) }}
                           title="Edit"
-                          className={`p-1.5 rounded-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200 hover:bg-white/5' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
                         >
                           <Pencil size={15} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); select(init.id); navigate(`/initiatives/${init.id}`) }}
                           title="View"
-                          className={`p-1.5 rounded-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200 hover:bg-white/5' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
                         >
                           <Eye size={15} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteId(init.id) }}
                           title="Delete"
-                          className={`p-1.5 rounded-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
                         >
                           <Trash2 size={15} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); togglePin(init.id) }}
-                          title={isPinned ? 'Unpin' : 'Pin'}
-                          className={`p-1.5 rounded-lg cursor-pointer transition-colors ${isPinned ? 'text-yellow-400 hover:bg-yellow-400/10' : dark ? 'text-gray-600 hover:text-yellow-400 hover:bg-white/5' : 'text-gray-300 hover:text-yellow-400 hover:bg-gray-100'}`}
+                          className={`transition-colors ${isPinned ? 'text-yellow-400' : dark ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
                         >
                           <Star size={15} fill={isPinned ? 'currentColor' : 'none'} />
                         </button>
@@ -272,9 +268,9 @@ export default function Initiatives() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-[9px] mb-2 pr-28">
+                  <div className="flex items-center gap-[9px] mb-2 pr-16">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                    <p title={init.name} className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
+                    <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
                   </div>
 
                   {init.priority && PRIORITY_META[init.priority] && (

@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { Brain, Loader2, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
+import { Brain, Loader2, LogIn, UserPlus, Eye, EyeOff, Zap, GitBranch, Layers, Search } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
-// Lowercase letters, digits and single internal hyphens, 2-32 chars, no leading/trailing
-// hyphen - matches how the backend normalises and stores the slug.
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/i
 
 export default function Login() {
@@ -32,258 +30,202 @@ export default function Login() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      background: '#06060f',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'system-ui,-apple-system,sans-serif', overflow: 'hidden', position: 'relative', background: '#030f07' }}>
       <style>{`
-        @keyframes move1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,-50px)} }
-        @keyframes move2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-30px,40px)} }
-        @keyframes move3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,30px)} }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes spin   { to{transform:rotate(360deg)} }
-        .nplc-input {
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes orb1 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(60px, -40px) } }
+        @keyframes orb2 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-50px, 60px) } }
+        @keyframes orb3 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(30px, 50px) } }
+        @keyframes shimmer { 0% { background-position: -200% center } 100% { background-position: 200% center } }
+        @keyframes pulse-ring { 0% { transform: scale(0.92); opacity: 0.7 } 70% { transform: scale(1.08); opacity: 0 } 100% { transform: scale(0.92); opacity: 0 } }
+        @keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+        @keyframes card-in { from { opacity: 0; transform: translateX(24px) } to { opacity: 1; transform: translateX(0) } }
+
+        .login-input {
           width: 100%; box-sizing: border-box;
           background: rgba(255,255,255,0.05);
-          border: 1.5px solid rgba(255,255,255,0.09);
-          border-radius: 12px; padding: 12px 14px;
-          font-size: 14px; color: #f1f5f9;
-          outline: none; transition: border-color .18s, box-shadow .18s;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 10px; padding: 12px 16px;
+          font-size: 14px; color: #f1f5f9; outline: none; transition: all .2s;
         }
-        .nplc-input::placeholder { color: rgba(255,255,255,0.2); }
-        .nplc-input:focus {
-          border-color: rgba(16,185,129,0.7);
-          box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+        .login-input::placeholder { color: rgba(255,255,255,0.2); }
+        .login-input:focus {
+          border-color: rgba(52,211,153,0.6);
+          background: rgba(52,211,153,0.04);
+          box-shadow: 0 0 0 3px rgba(52,211,153,0.1);
         }
-        .nplc-btn {
-          width: 100%; padding: 13px;
-          background: linear-gradient(135deg, #059669, #10b981, #14b8a6);
-          color: #fff; border: none; border-radius: 12px;
-          font-size: 14px; font-weight: 700; cursor: pointer;
+        .login-btn {
+          width: 100%; padding: 13px; border: none; border-radius: 10px;
+          background: linear-gradient(135deg, #059669 0%, #10b981 50%, #14b8a6 100%);
+          color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
           display: flex; align-items: center; justify-content: center; gap: 8px;
-          transition: opacity .18s, transform .1s;
-          box-shadow: 0 8px 32px rgba(16,185,129,0.35);
+          transition: all .25s; box-shadow: 0 4px 20px rgba(16,185,129,0.5);
         }
-        .nplc-btn:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); box-shadow: 0 12px 40px rgba(16,185,129,0.45); }
-        .nplc-btn:active:not(:disabled) { transform: translateY(0); }
-        .nplc-btn:disabled { opacity: .5; cursor: not-allowed; }
-        .nplc-card { animation: fadeUp .45s ease both; }
+        .login-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(16,185,129,0.65); }
+        .login-btn:active:not(:disabled) { transform: translateY(0); }
+        .login-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .form-card { animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both; }
       `}</style>
 
-      {/* Mesh gradient background */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <div style={{
-          position: 'absolute', width: 700, height: 700, borderRadius: '50%',
-          top: '-20%', left: '-15%',
-          background: 'radial-gradient(circle at center, rgba(16,185,129,0.2) 0%, transparent 60%)',
-          animation: 'move1 10s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', width: 600, height: 600, borderRadius: '50%',
-          bottom: '-18%', right: '-10%',
-          background: 'radial-gradient(circle at center, rgba(20,184,166,0.18) 0%, transparent 60%)',
-          animation: 'move2 13s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', width: 400, height: 400, borderRadius: '50%',
-          top: '30%', left: '45%',
-          background: 'radial-gradient(circle at center, rgba(5,150,105,0.15) 0%, transparent 60%)',
-          animation: 'move3 8s ease-in-out infinite',
-        }} />
-        {/* Noise grid */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'linear-gradient(rgba(16,185,129,0.04) 1px, transparent 1px), linear-gradient(90deg,rgba(16,185,129,0.04) 1px,transparent 1px)',
-          backgroundSize: '48px 48px',
-        }} />
+      {/* ── Ambient background orbs ── */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', width: 700, height: 700, borderRadius: '50%', top: '-200px', left: '-200px', background: 'radial-gradient(circle, rgba(5,150,105,0.18) 0%, transparent 65%)', animation: 'orb1 20s ease-in-out infinite', filter: 'blur(1px)' }} />
+        <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', bottom: '-150px', right: '-150px', background: 'radial-gradient(circle, rgba(13,148,136,0.15) 0%, transparent 65%)', animation: 'orb2 25s ease-in-out infinite', filter: 'blur(1px)' }} />
+        <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', top: '40%', left: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 65%)', animation: 'orb3 18s ease-in-out infinite', filter: 'blur(1px)' }} />
+        {/* subtle dot grid */}
+        <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.06 }}>
+          <defs>
+            <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="1.5" cy="1.5" r="1.5" fill="#34d399" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#dots)" />
+        </svg>
       </div>
 
-      {/* Left — hero */}
-      <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', padding: '60px 72px',
-        position: 'relative', zIndex: 1,
-      }} className="hidden lg:flex">
+      {/* ── Left: brand + features (desktop only) ── */}
+      <div className="hidden lg:flex" style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', padding: '64px 72px', position: 'relative', zIndex: 1 }}>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 56 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 14,
-            background: 'linear-gradient(135deg,#059669,#10b981)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 28px rgba(16,185,129,0.55)',
-          }}>
-            <Brain size={24} color="#fff" />
+        {/* Brand mark */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 56 }}>
+          <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: 16, background: 'linear-gradient(135deg,#059669,#10b981)', opacity: 0.3, animation: 'pulse-ring 2.5s ease-out infinite' }} />
+            <div style={{ position: 'relative', width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#059669,#10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 24px rgba(16,185,129,0.5)' }}>
+              <Brain size={24} color="#fff" />
+            </div>
           </div>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>NLPC</div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
-              background: 'linear-gradient(90deg,#34d399,#14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Never Lose Product Context
+            <div style={{ fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', lineHeight: 1 }}>NLPC</div>
+            <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', background: 'linear-gradient(90deg,#34d399,#14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: 2 }}>
+              Hackathon 2K26
             </div>
           </div>
         </div>
 
-        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase',
-          color: '#34d399', marginBottom: 18 }}>
-          Product Memory · AI Native
-        </div>
+        {/* Headline */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 13px', borderRadius: 99, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', marginBottom: 22 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', display: 'inline-block', boxShadow: '0 0 8px #34d399' }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#6ee7b7', letterSpacing: '.12em', textTransform: 'uppercase' }}>AI-Powered Product Memory</span>
+          </div>
 
-        <div style={{ fontSize: 58, fontWeight: 900, lineHeight: 1.05, letterSpacing: '-2.5px', marginBottom: 24 }}>
-          <span style={{ color: '#fff' }}>Never lose<br /></span>
-          <span style={{
-            background: 'linear-gradient(90deg,#34d399,#10b981,#14b8a6)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>context again.</span>
-        </div>
+          <h1 style={{ fontSize: 58, fontWeight: 900, lineHeight: 1.04, letterSpacing: '-3px', margin: 0, marginBottom: 20 }}>
+            <span style={{ color: '#fff', display: 'block' }}>Never lose</span>
+            <span style={{ display: 'block', background: 'linear-gradient(90deg,#34d399 0%,#10b981 50%,#14b8a6 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'shimmer 4s linear infinite' }}>
+              context again.
+            </span>
+          </h1>
 
-        <p style={{ fontSize: 16, lineHeight: 1.8, color: 'rgba(255,255,255,0.38)', maxWidth: 400, marginBottom: 52 }}>
-          One place for every decision, every source, every&nbsp;why —
-          so your team never has to start from&nbsp;scratch.
-        </p>
-
-        {/* Stats row */}
-        <div style={{ display: 'flex', gap: 32, marginBottom: 48 }}>
-          {[['AI Q&A','Ask anything'],['Timeline','Full history'],['Sync','Jira + GitHub']].map(([big,small],i)=>(
-            <div key={i}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: '#34d399' }}>{big}</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{small}</div>
-            </div>
-          ))}
+          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.35)', lineHeight: 1.75, maxWidth: 420, margin: 0 }}>
+            One place for every decision, ticket, commit &amp; open question — so your whole team always knows <em style={{ color: 'rgba(52,211,153,0.7)', fontStyle: 'normal', fontWeight: 600 }}>why</em>.
+          </p>
         </div>
 
         {/* Feature list */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 380 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {[
-            { dot: '#34d399', text: 'Capture decisions with full context & rationale' },
-            { dot: '#10b981', text: 'Sync Jira tickets and GitHub commits automatically' },
-            { dot: '#14b8a6', text: 'Ask AI questions about any initiative instantly' },
-          ].map((f, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10,
-              fontSize: 13.5, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: f.dot, flexShrink: 0 }} />
-              {f.text}
+            { icon: Zap, color: '#fbbf24', label: 'AI Q&A', desc: 'Ask anything about your product in plain English' },
+            { icon: Layers, color: '#60a5fa', label: 'Decision Timeline', desc: 'Every decision logged with full context & rationale' },
+            { icon: GitBranch, color: '#a78bfa', label: 'Jira & Git Sync', desc: 'Tickets and commits auto-linked to initiatives' },
+            { icon: Search, color: '#34d399', label: 'Semantic Search', desc: 'Find anything across all initiatives instantly' },
+          ].map(({ icon: Icon, color, label, desc }, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, animation: `card-in .4s ease ${i * 0.08}s both` }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}14`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Icon size={15} color={color} />
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#e5e7eb' }}>{label}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', lineHeight: 1.4 }}>{desc}</div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Right — form */}
-      <div style={{
-        width: 460, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '40px 44px', position: 'relative', zIndex: 1,
-        borderLeft: '1px solid rgba(255,255,255,0.05)',
-        background: 'rgba(255,255,255,0.02)',
-        backdropFilter: 'blur(24px)',
-      }}>
-        <div className="nplc-card" style={{ width: '100%' }}>
+      {/* ── Vertical divider (desktop) ── */}
+      <div className="hidden lg:block" style={{ width: 1, background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
 
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 11,
-              background: 'linear-gradient(135deg,#059669,#10b981)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(16,185,129,0.5)' }}>
-              <Brain size={19} color="#fff" />
+      {/* ── Right: form ── */}
+      <div className="w-full lg:w-[460px] lg:flex-shrink-0" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', position: 'relative', zIndex: 1 }}>
+        <div className="form-card" style={{ width: '100%' }}>
+
+          {/* Mobile brand */}
+          <div className="flex lg:hidden" style={{ alignItems: 'center', gap: 10, marginBottom: 36 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg,#059669,#10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Brain size={18} color="#fff" />
             </div>
-            <span style={{ fontSize: 17, fontWeight: 900, color: '#fff' }}>NLPC</span>
+            <span style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>NLPC</span>
           </div>
 
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-0.5px' }}>
-            {mode === 'signup' ? 'Create a workspace' : 'Welcome back'}
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-0.6px' }}>
+            {mode === 'signup' ? 'Create workspace' : 'Welcome back'}
           </div>
-          <div style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.38)', marginBottom: 28, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.3)', marginBottom: 32, lineHeight: 1.6 }}>
             {mode === 'signup'
-              ? 'A workspace has one shared password for your team.'
+              ? 'One workspace, one shared password for your team.'
               : 'Sign in to your workspace to continue.'}
           </div>
 
-          <form onSubmit={handleSubmit(submit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleSubmit(submit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             {mode === 'signup' && (
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600,
-                  color: 'rgba(255,255,255,0.45)', marginBottom: 7, letterSpacing: '0.02em' }}>
-                  Workspace name
-                </label>
-                <input className="nplc-input" placeholder="Acme Product Team"
-                  {...register('tenantName', { required: 'Workspace name is required' })} />
-                {errors.tenantName && (
-                  <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.tenantName.message}</p>
-                )}
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>Workspace name</label>
+                <input className="login-input" placeholder="Acme Product Team" {...register('tenantName', { required: 'Required' })} />
+                {errors.tenantName && <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.tenantName.message}</p>}
               </div>
             )}
 
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600,
-                color: 'rgba(255,255,255,0.45)', marginBottom: 7, letterSpacing: '0.02em' }}>
-                Workspace slug
-              </label>
-              <input className="nplc-input" placeholder="acme" autoCapitalize="none" autoCorrect="off"
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>Workspace slug</label>
+              <input className="login-input" placeholder="acme" autoCapitalize="none" autoCorrect="off"
                 {...register('tenantSlug', {
-                  required: 'Workspace slug is required',
-                  pattern: {
-                    value: SLUG_PATTERN,
-                    message: 'Only letters, numbers and single hyphens (e.g. "acme-labs")',
-                  },
-                  minLength: { value: 2, message: 'At least 2 characters' },
-                  maxLength: { value: 32, message: 'At most 32 characters' },
+                  required: 'Required',
+                  pattern: { value: SLUG_PATTERN, message: 'Letters, numbers & single hyphens only' },
+                  minLength: { value: 2, message: 'Min 2 characters' },
+                  maxLength: { value: 32, message: 'Max 32 characters' },
                 })} />
-              {errors.tenantSlug && (
-                <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.tenantSlug.message}</p>
-              )}
+              {errors.tenantSlug && <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.tenantSlug.message}</p>}
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600,
-                color: 'rgba(255,255,255,0.45)', marginBottom: 7, letterSpacing: '0.02em' }}>
-                Password
-              </label>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>Password</label>
               <div style={{ position: 'relative' }}>
-                <input className="nplc-input" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
-                  style={{ paddingRight: 42 }}
+                <input className="login-input" type={showPassword ? 'text' : 'password'} placeholder="••••••••" style={{ paddingRight: 44 }}
                   {...register('password', {
-                    required: 'Password is required',
-                    ...(mode === 'signup' ? { minLength: { value: 8, message: 'At least 8 characters' } } : {}),
+                    required: 'Required',
+                    ...(mode === 'signup' ? { minLength: { value: 8, message: 'Min 8 characters' } } : {}),
                   })} />
                 <button type="button" onClick={() => setShowPassword(v => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 6,
-                    color: 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center',
-                    borderRadius: 6, transition: 'color .15s, background .15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.background = 'none' }}>
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                  style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', transition: 'color .15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}>
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {errors.password ? (
-                <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.password.message}</p>
-              ) : mode === 'signup' && (
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 5 }}>At least 8 characters.</p>
-              )}
+              {errors.password
+                ? <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.password.message}</p>
+                : mode === 'signup' && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 5 }}>Minimum 8 characters</p>}
             </div>
 
-            <button type="submit" disabled={loading} className="nplc-btn" style={{ marginTop: 4 }}>
+            <button type="submit" disabled={loading} className="login-btn" style={{ marginTop: 4 }}>
               {loading
                 ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />Please wait…</>
                 : mode === 'signup'
-                  ? <><UserPlus size={15} />Create workspace</>
-                  : <><LogIn size={15} />Sign in</>}
+                  ? <><UserPlus size={14} />Create workspace</>
+                  : <><LogIn size={14} />Sign in</>}
             </button>
           </form>
 
-          <div style={{ textAlign: 'center', marginTop: 22, fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>
-            {mode === 'signup' ? 'Already have a workspace?' : "Don't have a workspace?"}{' '}
+          <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '26px 0' }} />
+
+          <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.22)', margin: 0 }}>
+            {mode === 'signup' ? 'Already have a workspace? ' : "Don't have a workspace? "}
             <Link to={mode === 'signup' ? '/sign-in' : '/sign-up'}
-              style={{ cursor: 'pointer', fontSize: 13, fontWeight: 700,
-                backgroundImage: 'linear-gradient(90deg,#34d399,#14b8a6)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              style={{ fontWeight: 700, fontSize: 13, background: 'linear-gradient(90deg,#34d399,#14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               {mode === 'signup' ? 'Sign in' : 'Create one'}
             </Link>
-          </div>
+          </p>
         </div>
       </div>
     </div>

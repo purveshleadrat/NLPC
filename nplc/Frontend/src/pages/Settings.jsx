@@ -35,8 +35,9 @@ export default function Settings() {
               <span className={`text-[13px] font-medium ${head}`}>{dark ? 'Dark' : 'Light'} mode</span>
             </div>
             <button
+              type="button"
               onClick={toggle}
-              className="relative rounded-full transition-all flex-shrink-0"
+              className="relative rounded-full transition-all flex-shrink-0 cursor-pointer"
               style={{ width: 36, height: 20, background: dark ? 'linear-gradient(135deg,#059669,#0d9488)' : 'rgba(0,0,0,0.12)' }}
               title="Toggle theme"
             >
@@ -53,9 +54,10 @@ export default function Settings() {
             <div className="flex gap-1">
               {FONT_OPTS.map(({ id }) => (
                 <button
+                  type="button"
                   key={id}
                   onClick={() => setFontSize(id)}
-                  className="rounded-[6px] transition-all text-[11px] font-bold"
+                  className="rounded-[6px] transition-all text-[11px] font-bold cursor-pointer"
                   style={{
                     width: 26, height: 26,
                     background: fontSize === id ? 'linear-gradient(135deg,#059669,#0d9488)' : dark ? 'rgba(255,255,255,0.08)' : '#e5e7eb',

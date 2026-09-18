@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
 
 const TOUR_KEY = 'nplc_tour_done'
@@ -51,16 +52,19 @@ const STEPS = [
 const SIDEBAR_TARGETS = new Set(['tour-initiatives', 'tour-search', 'tour-integrations', 'tour-settings'])
 
 export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
+  const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [cardTop, setCardTop] = useState(null)
   const current = STEPS[step]
   const isLast = step === STEPS.length - 1
   const isSidebarStep = current.target && SIDEBAR_TARGETS.has(current.target)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
 
   function finish() {
     try { localStorage.setItem(TOUR_KEY, '1') } catch { /* ignore */ }
     onCloseSidebar?.()
     onDone()
+    navigate('/integrations')
   }
 
   function next() { isLast ? finish() : setStep(s => s + 1) }
@@ -98,25 +102,25 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
     }
   }, [current.target])
 
-  // Card positioning
-  const cardStyle = isSidebarStep && cardTop !== null
+  // Card positioning — on mobile always center; on desktop offset next to sidebar
+  const cardStyle = isSidebarStep && cardTop !== null && !isMobile
     ? { left: 232, top: cardTop, transform: 'none' }
     : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
 
   return (
     <>
-      {/* Backdrop — excludes sidebar area on sidebar steps */}
+      {/* Backdrop — excludes sidebar area on desktop sidebar steps */}
       <div className="fixed z-[998] pointer-events-none"
         style={{
           top: 0, bottom: 0,
-          left: isSidebarStep ? 220 : 0,
+          left: isSidebarStep && !isMobile ? 220 : 0,
           right: 0,
           background: 'rgba(0,0,0,0.55)',
           backdropFilter: 'blur(2px)',
         }} />
 
-      {/* Arrow pointing to sidebar (sidebar steps only) */}
-      {isSidebarStep && cardTop !== null && (
+      {/* Arrow pointing to sidebar (desktop sidebar steps only) */}
+      {isSidebarStep && cardTop !== null && !isMobile && (
         <div className="fixed z-[1000]" style={{ left: 224, top: cardTop + 100, transform: 'translateY(-50%)' }}>
           <div style={{
             width: 0, height: 0,
@@ -138,7 +142,7 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
               App Tour · {step + 1}/{STEPS.length}
             </span>
           </div>
-          <button onClick={finish} className="text-gray-500 hover:text-gray-300 transition-colors">
+          <button type="button" onClick={finish} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">
             <X size={15} />
           </button>
         </div>
@@ -161,17 +165,18 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
         {/* Navigation */}
         <div className="flex items-center justify-between">
           <button
+            type="button"
             onClick={prev}
             disabled={step === 0}
-            className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
+            className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
             <ChevronLeft size={14} /> Back
           </button>
 
           <div className="flex gap-1.5">
             {STEPS.map((_, i) => (
-              <button key={i} onClick={() => setStep(i)}
-                className="rounded-full transition-all"
+              <button type="button" key={i} onClick={() => setStep(i)}
+                className="rounded-full transition-all cursor-pointer"
                 style={{
                   width: i === step ? 16 : 6, height: 6,
                   background: i === step ? '#34d399' : 'rgba(255,255,255,0.15)',
@@ -180,8 +185,9 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
           </div>
 
           <button
+            type="button"
             onClick={next}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all cursor-pointer"
             style={{ background: 'linear-gradient(135deg, #059669, #0d9488)', boxShadow: '0 2px 8px rgba(5,150,105,0.4)' }}
           >
             {isLast ? 'Get started' : 'Next'} {!isLast && <ChevronRight size={14} />}

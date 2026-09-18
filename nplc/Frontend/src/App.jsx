@@ -57,7 +57,7 @@ function RequireInitiative({ children }) {
     )
   }
   if (idFromRoute && !routeIdIsValid) {
-    return <Navigate to="/initiatives" replace />
+    return <Navigate to="/" replace />
   }
   if (!currentId) {
     return (
@@ -108,7 +108,7 @@ function Shell() {
         {/* Mobile topbar */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 flex-shrink-0"
           style={{ background: dark ? '#0a0f0d' : '#f3f4f6', borderBottom: dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid #e5e7eb' }}>
-          <button onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-gray-200 transition-colors">
+          <button type="button" onClick={() => setSidebarOpen(true)} className="text-gray-400 hover:text-gray-200 transition-colors cursor-pointer">
             <Menu size={20} />
           </button>
           <span className="text-[15px] font-bold" style={{ color: dark ? '#fff' : '#064e3b' }}>NPLC</span>

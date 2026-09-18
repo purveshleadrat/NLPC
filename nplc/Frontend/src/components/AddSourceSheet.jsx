@@ -10,6 +10,7 @@ import {
   importJira, listGitHubBranches, importGitBranch,
 } from '../api/client'
 import { useInitiative } from '../context/InitiativeContext'
+import { useTheme } from '../context/ThemeContext'
 import SideSheet from './SideSheet'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -46,9 +47,17 @@ function projectTicketJql(projectKey, raw) {
 function SearchableSelect({
   placeholder, valueLabel, items, loading, disabled, onQueryChange, onSelect, emptyText = 'No results',
 }) {
+  const { dark } = useTheme()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const shown = items.slice(0, 10)
+
+  const iconColor = dark ? 'rgba(255,255,255,0.4)' : '#9ca3af'
+  const inputColor = dark ? '#e5e7eb' : '#111827'
+  const mutedColor = dark ? 'rgba(255,255,255,0.4)' : '#9ca3af'
+  const labelColor = dark ? '#f1f5f9' : '#111827'
+  const subColor = dark ? 'rgba(255,255,255,0.45)' : '#6b7280'
+  const hoverBg = dark ? 'rgba(255,255,255,0.05)' : '#f3f4f6'
 
   return (
     <Popover
@@ -59,7 +68,7 @@ function SearchableSelect({
         <button
           type="button"
           disabled={disabled}
-          className="flex h-9 w-full items-center justify-between rounded-[7px] border border-input bg-background/50 px-3 py-1.5 text-[12.5px] transition-colors hover:bg-white/5 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-left"
+          className="flex h-9 w-full items-center justify-between rounded-[7px] border border-input bg-background/50 px-3 py-1.5 text-[12.5px] transition-colors hover:bg-accent focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-left"
         >
           <span className={valueLabel ? 'text-foreground truncate' : 'text-muted-foreground'}>
             {valueLabel || placeholder}
@@ -67,41 +76,44 @@ function SearchableSelect({
           <ChevronDown className="size-3.5 opacity-50 ml-2 flex-shrink-0" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start">
-        <div className="p-2 border-b border-white/10">
-          <div className="flex items-center gap-2 rounded-[6px] bg-background/50 px-2 border border-white/10">
-            <SearchIcon className="size-3.5 opacity-50 flex-shrink-0" />
+      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)] rounded-[10px]" align="start">
+        <div className="p-2 border-b border-border">
+          <div className="flex items-center gap-2 rounded-[6px] px-2 bg-muted border border-border">
+            <SearchIcon className="size-3.5 flex-shrink-0" style={{ color: iconColor }} />
             <input
               autoFocus
               value={q}
               onChange={(e) => { setQ(e.target.value); onQueryChange?.(e.target.value) }}
               placeholder="Search…"
-              className="h-8 w-full bg-transparent text-[12.5px] outline-none placeholder:text-muted-foreground"
+              className="h-8 w-full bg-transparent text-[12.5px] outline-none"
+              style={{ color: inputColor }}
             />
           </div>
         </div>
         <div className="max-h-64 overflow-y-auto py-1">
           {loading ? (
-            <div className="flex items-center gap-2 px-3 py-3 text-[12.5px] text-muted-foreground">
+            <div className="flex items-center gap-2 px-3 py-3 text-[12.5px]" style={{ color: mutedColor }}>
               <Loader2 size={13} className="animate-spin" /> Loading…
             </div>
           ) : shown.length === 0 ? (
-            <div className="px-3 py-3 text-[12.5px] text-muted-foreground">{emptyText}</div>
+            <div className="px-3 py-3 text-[12.5px]" style={{ color: mutedColor }}>{emptyText}</div>
           ) : (
             shown.map((it) => (
               <button
                 key={it.value}
                 type="button"
                 onClick={() => { onSelect(it); setOpen(false) }}
-                className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left hover:bg-white/5 transition-colors"
+                onMouseEnter={e => { e.currentTarget.style.background = hoverBg }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                className="flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left transition-colors cursor-pointer"
               >
-                <span className="text-[12.5px] text-foreground truncate w-full">{it.label}</span>
-                {it.sub && <span className="text-[11px] text-muted-foreground truncate w-full">{it.sub}</span>}
+                <span className="text-[12.5px] truncate w-full" style={{ color: labelColor }}>{it.label}</span>
+                {it.sub && <span className="text-[11px] truncate w-full" style={{ color: subColor }}>{it.sub}</span>}
               </button>
             ))
           )}
           {!loading && items.length > 10 && (
-            <div className="px-3 py-1.5 text-[11px] text-muted-foreground border-t border-white/10">
+            <div className="px-3 py-1.5 text-[11px]" style={{ borderTop: `1px solid ${popupBorder}`, color: mutedColor }}>
               Showing 10 of {items.length} — refine your search
             </div>
           )}
