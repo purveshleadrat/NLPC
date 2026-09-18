@@ -22,7 +22,7 @@ const links = [
 ]
 
 
-const SIDEBAR_DARK = '#131320'
+const SIDEBAR_DARK = '#0a0a15'
 
 export default function Sidebar() {
   const { dark, toggle } = useTheme()
@@ -31,7 +31,6 @@ export default function Sidebar() {
   const bg          = dark ? SIDEBAR_DARK : '#ffffff'
   const borderColor = dark ? 'rgba(255,255,255,0.07)' : '#e5e7eb'
   const textMuted   = dark ? '#6b7280' : '#9ca3af'
-  const textActive  = '#ffffff'
   const dividerBg   = dark ? 'rgba(255,255,255,0.07)' : '#e5e7eb'
 
   return (
@@ -79,9 +78,9 @@ export default function Sidebar() {
             {({ isActive }) => (
               <div
                 style={isActive ? {
-                  background: dark ? '#1d293d' : '#eff6ff',
-                  color: dark ? '#93c5fd' : '#2563eb',
-                  border: dark ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid #bfdbfe',
+                  background: dark ? 'rgba(16,185,129,0.12)' : '#ecfdf5',
+                  color: dark ? '#34d399' : '#059669',
+                  border: dark ? '1px solid rgba(16,185,129,0.3)' : '1px solid #6ee7b7',
                   borderRadius: 7,
                 } : {
                   color: textMuted,
@@ -94,13 +93,13 @@ export default function Sidebar() {
               >
                 <Icon
                   size={14}
-                  style={{ color: isActive ? (dark ? '#93c5fd' : '#2563eb') : dark ? '#6b7280' : '#9ca3af', flexShrink: 0 }}
+                  style={{ color: isActive ? (dark ? '#34d399' : '#059669') : dark ? '#6b7280' : '#9ca3af', flexShrink: 0 }}
                 />
                 <span className="text-[12.5px] font-medium leading-none">{label}</span>
                 {isActive && (
                   <span
                     className="ml-auto rounded-full"
-                    style={{ width: 5, height: 5, background: dark ? '#60a5fa' : '#2563eb', flexShrink: 0 }}
+                    style={{ width: 5, height: 5, background: dark ? '#34d399' : '#059669', flexShrink: 0 }}
                   />
                 )}
               </div>

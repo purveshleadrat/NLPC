@@ -116,15 +116,15 @@ export default function ChangeImpact({ refreshTick = 0 }) {
   )
 
   const inp = dark
-    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-indigo-500/60 focus:ring-indigo-500/20'
-    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
+    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-emerald-500/60 focus:ring-emerald-500/20'
+    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:ring-emerald-100'
 
   return (
     <div className="max-w-4xl">
 
       {!loading && !error && (
         <div className="grid grid-cols-3 gap-4 mb-7">
-          <StatCard label="Affected Items"  value={Object.keys(grouped).length} icon={Activity}   color={dark ? 'text-indigo-400' : 'text-indigo-600'} dark={dark} />
+          <StatCard label="Affected Items"  value={Object.keys(grouped).length} icon={Activity}   color={dark ? 'text-emerald-400' : 'text-emerald-600'} dark={dark} />
           <StatCard label="Current Events"  value={events.filter(e => e.status === 'CURRENT').length} icon={TrendingUp} color={dark ? 'text-emerald-400' : 'text-emerald-600'} dark={dark} />
           <StatCard label="Superseded"      value={events.filter(e => e.status === 'SUPERSEDED').length} icon={RotateCcw}  color={dark ? 'text-gray-400' : 'text-gray-500'} dark={dark} />
         </div>

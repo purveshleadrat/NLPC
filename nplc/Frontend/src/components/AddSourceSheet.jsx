@@ -155,7 +155,7 @@ export default function AddSourceSheet({ onClose, onAdded }) {
                 onClick={() => { setKind(id); setStatus(null); setMessage('') }}
                 className={`flex-1 flex items-center justify-center gap-1.5 rounded-[7px] border px-3 py-2 text-[12.5px] font-medium transition-colors cursor-pointer ${
                   kind === id
-                    ? 'border-blue-500/50 bg-blue-500/10 text-blue-300'
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-300'
                     : 'border-white/10 text-muted-foreground hover:bg-white/5'
                 }`}
               >

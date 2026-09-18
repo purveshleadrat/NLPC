@@ -15,8 +15,8 @@ const EXAMPLE_QUESTIONS = [
 function TypingIndicator({ dark }) {
   return (
     <div className="flex gap-3 items-end">
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${dark ? 'bg-indigo-600/20 border border-indigo-500/30' : 'bg-indigo-50 border border-indigo-100'}`}>
-        <Bot size={14} className={dark ? 'text-indigo-400' : 'text-indigo-500'} />
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${dark ? 'bg-emerald-600/20 border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-100'}`}>
+        <Bot size={14} className={dark ? 'text-emerald-400' : 'text-emerald-500'} />
       </div>
       <div className={`rounded-2xl rounded-bl-sm px-4 py-3 ${dark ? 'glass-dark' : 'glass-light shadow-sm'}`}>
         <div className="flex gap-1 items-center h-4">
@@ -38,11 +38,11 @@ function Message({ msg, dark }) {
       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
         isUser
           ? 'brand-gradient shadow-md shadow-indigo-500/20'
-          : dark ? 'bg-indigo-600/20 border border-indigo-500/30' : 'bg-indigo-50 border border-indigo-100'
+          : dark ? 'bg-emerald-600/20 border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-100'
       }`}>
         {isUser
           ? <User size={13} className="text-white" />
-          : <Bot size={14} className={dark ? 'text-indigo-400' : 'text-indigo-500'} />
+          : <Bot size={14} className={dark ? 'text-emerald-400' : 'text-emerald-500'} />
         }
       </div>
 
@@ -50,7 +50,7 @@ function Message({ msg, dark }) {
       <div className={`flex flex-col gap-1.5 max-w-[78%] ${isUser ? 'items-end' : 'items-start'}`}>
         <div className={`rounded-2xl px-4 py-3 text-[16px] leading-relaxed ${
           isUser
-            ? 'brand-gradient text-white rounded-br-sm shadow-md shadow-indigo-500/15'
+            ? 'brand-gradient text-white rounded-br-sm shadow-md shadow-emerald-500/15'
             : dark
               ? 'glass-dark text-gray-200 rounded-bl-sm'
               : 'glass-light shadow-sm text-gray-700 rounded-bl-sm'
@@ -133,11 +133,11 @@ export default function AskContext() {
 
   const msgArea = dark ? 'glass-dark' : 'bg-gray-50/60 border border-gray-200'
   const exBtn   = dark
-    ? 'bg-white/[0.04] border border-white/[0.07] text-gray-400 hover:bg-white/[0.08] hover:text-gray-200 hover:border-indigo-500/30 disabled:opacity-40'
-    : 'bg-white border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 disabled:opacity-40'
+    ? 'bg-white/[0.04] border border-white/[0.07] text-gray-400 hover:bg-white/[0.08] hover:text-gray-200 hover:border-emerald-500/30 disabled:opacity-40'
+    : 'bg-white border border-gray-200 text-gray-500 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 disabled:opacity-40'
   const inp     = dark
-    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-indigo-500/60 focus:ring-indigo-500/20'
-    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:ring-indigo-100'
+    ? 'bg-white/[0.04] border-white/[0.08] text-gray-100 placeholder-gray-600 focus:border-emerald-500/60 focus:ring-emerald-500/20'
+    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:ring-emerald-100'
 
   return (
     <div className="max-w-4xl flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
