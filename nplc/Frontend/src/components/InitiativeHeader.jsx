@@ -2,79 +2,16 @@ import { useState, useEffect, useCallback } from 'react'
 import { RefreshCw, Loader2, Mail, Send, CheckCircle } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
-import { getInitiativeConnections, getConnections, getSources, syncInitiative, addDecision, sendInitiativeMail } from '../api/client'
+import { getInitiativeConnections, getConnections, getSources, syncInitiative, sendInitiativeMail } from '../api/client'
 import SideSheet from './SideSheet'
 import AddSourceSheet from './AddSourceSheet'
 import { Button } from './ui/button'
-import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
 
 const TABS = [
   { id: 'timeline', label: 'Timeline' },
-  { id: 'impact',   label: 'Scope' },
   { id: 'ask',      label: 'Ask' },
-  { id: 'brief',    label: 'Brief' },
-  { id: 'sources',  label: 'Sources' },
 ]
-
-function AddDecisionSheet({ onClose, onAdded }) {
-  const { currentId } = useInitiative()
-  const [summary, setSummary] = useState('')
-  const [decidedBy, setDecidedBy] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState(null)
-
-  const label = 'block text-[11px] font-semibold uppercase tracking-wide mb-1.5 text-muted-foreground'
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!summary.trim()) return
-    setSubmitting(true); setError(null)
-    try {
-      await addDecision(currentId, { summary: summary.trim(), decidedBy: decidedBy.trim() || undefined })
-      onAdded()
-      onClose()
-    } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to add decision.')
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <SideSheet title="Add a decision" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 h-full">
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          <div>
-            <label className={label}>Decision</label>
-            <Textarea
-              autoFocus
-              value={summary}
-              onChange={e => setSummary(e.target.value)}
-              placeholder="e.g. Cap broadcasts at 5/day per workspace"
-              rows={4}
-            />
-          </div>
-          <div>
-            <label className={label}>Decided by (optional)</label>
-            <Input
-              value={decidedBy}
-              onChange={e => setDecidedBy(e.target.value)}
-              placeholder="e.g. Sam"
-            />
-          </div>
-          {error && <p className="text-[12.5px] text-red-500">{error}</p>}
-        </div>
-        <div className="p-4 border-t border-white/10 bg-background/95 backdrop-blur shrink-0 flex items-center justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="brand" disabled={!summary.trim() || submitting}>
-            {submitting && <Loader2 size={13} className="animate-spin" />}
-            Add decision
-          </Button>
-        </div>
-      </form>
-    </SideSheet>
-  )
-}
 
 function SendMailSheet({ onClose }) {
   const { currentId } = useInitiative()
@@ -170,7 +107,6 @@ export default function InitiativeHeader({ activeTab, onTabChange, onChanged }) 
   const [commitCount, setCommitCount] = useState(null)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState(null)
-  const [showAddDecision, setShowAddDecision] = useState(false)
   const [showAddSource, setShowAddSource] = useState(false)
   const [showSendMail, setShowSendMail] = useState(false)
   const [hasSmtp, setHasSmtp] = useState(false)
@@ -254,12 +190,6 @@ export default function InitiativeHeader({ activeTab, onTabChange, onChanged }) 
           >
             Add source
           </button>
-          <button
-            onClick={() => setShowAddDecision(true)}
-            className="btn-prototype-tab cursor-pointer"
-          >
-            Add decision
-          </button>
           {hasSmtp && (
             <button
               onClick={() => setShowSendMail(true)}
@@ -282,12 +212,6 @@ export default function InitiativeHeader({ activeTab, onTabChange, onChanged }) 
         <p className={`text-[12px] ${muted}`}>{syncMsg}</p>
       )}
 
-      {showAddDecision && (
-        <AddDecisionSheet
-          onClose={() => setShowAddDecision(false)}
-          onAdded={() => { loadSummary(); onChanged?.() }}
-        />
-      )}
       {showAddSource && (
         <AddSourceSheet
           onClose={() => setShowAddSource(false)}

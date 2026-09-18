@@ -116,11 +116,12 @@ function Shell() {
 
         <div className="nplc-content p-4 sm:p-6 lg:p-8">
           <Routes>
-            <Route path="/" element={<Initiatives />} />
-            <Route path="/workspace" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
+            <Route path="/initiatives" element={<Initiatives />} />
+            <Route path="/initiatives/:id" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
             <Route path="/search" element={<GlobalSearch />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/integrations" element={<RequireInitiative><Integrations /></RequireInitiative>} />
+            <Route path="/integrations" element={<Integrations />} />
+            <Route path="*" element={<Navigate to="/initiatives" replace />} />
           </Routes>
         </div>
       </main>
