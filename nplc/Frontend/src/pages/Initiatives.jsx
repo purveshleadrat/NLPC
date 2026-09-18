@@ -8,10 +8,6 @@ import { getInitiativeConnections, getConnections, getSources, getEvents } from 
 import NewInitiativeModal from '../components/NewInitiativeModal'
 import EditInitiativeSheet from '../components/EditInitiativeSheet'
 
-const PROJECT_COLORS = [
-  '#22c55e', '#3b82f6', '#a855f7', '#f97316',
-  '#ec4899', '#14b8a6', '#eab308', '#ef4444', '#10b981', '#0ea5e9',
-]
 
 const PRIORITY_META = {
   HIGH: { label: 'High', dot: '#f87171', text: 'text-red-400' },
@@ -212,12 +208,11 @@ export default function Initiatives() {
         <>
           <p className={`text-[12px] mb-3 ${muted}`}>{processed.length} initiatives</p>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))' }}>
-            {processed.map((init, i) => {
+            {processed.map((init) => {
               const s = summaries[init.id] || {}
               const isPinned = pinned.includes(init.id)
               const changed = isRecentlyChanged(init.id)
               const updated = relativeDate(s.lastUpdated)
-              const color = PROJECT_COLORS[i % PROJECT_COLORS.length]
 
               const isConfirmingDelete = confirmDeleteId === init.id
 
@@ -233,14 +228,14 @@ export default function Initiatives() {
                         <button
                           onClick={e => { e.stopPropagation(); confirmDelete(init.id) }}
                           title="Confirm delete"
-                          className="text-red-400 hover:text-red-300 transition-colors"
+                          className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                         >
                           <Check size={13} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
                           title="Cancel"
-                          className={dark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
+                          className={`cursor-pointer ${dark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                         >
                           <X size={13} />
                         </button>
@@ -250,21 +245,21 @@ export default function Initiatives() {
                         <button
                           onClick={e => { e.stopPropagation(); setEditingInitiative(init) }}
                           title="Edit"
-                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
                         >
                           <Pencil size={12} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); select(init.id); navigate(`/initiatives/${init.id}`) }}
                           title="View"
-                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
                         >
                           <Eye size={12} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteId(init.id) }}
                           title="Delete"
-                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${dark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
                         >
                           <Trash2 size={12} />
                         </button>
@@ -279,7 +274,6 @@ export default function Initiatives() {
                   </div>
 
                   <div className="flex items-center gap-[9px] mb-2 pr-16">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
                     <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
                   </div>
 

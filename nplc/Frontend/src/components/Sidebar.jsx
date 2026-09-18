@@ -64,7 +64,7 @@ export default function Sidebar({ onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
+              className="lg:hidden p-1.5 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
               style={{ color: textMuted }}
               onMouseEnter={e => { e.currentTarget.style.color = dark ? '#e5e7eb' : '#111827' }}
               onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
