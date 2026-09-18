@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   Brain,
   LogOut,
@@ -18,16 +18,25 @@ const links = [
   { to: '/settings', label: 'Settings', icon: SettingsIcon, tourId: 'tour-settings' },
 ]
 
+// Paths that should keep the Initiatives nav item active
+const INITIATIVE_PATHS = ['/', '/workspace']
+
 const SIDEBAR_DARK = '#0d1410'
 
 export default function Sidebar({ onClose }) {
   const { dark } = useTheme()
   const { tenant, logout } = useAuth()
+  const location = useLocation()
 
   const bg          = dark ? SIDEBAR_DARK : '#ffffff'
   const borderColor = dark ? 'rgba(255,255,255,0.07)' : '#e5e7eb'
   const textMuted   = dark ? '#6b7280' : '#9ca3af'
   const dividerBg   = dark ? 'rgba(255,255,255,0.07)' : '#e5e7eb'
+
+  function isLinkActive(to) {
+    if (to === '/') return INITIATIVE_PATHS.includes(location.pathname)
+    return location.pathname === to || location.pathname.startsWith(to + '/')
+  }
 
   return (
     <aside
@@ -67,9 +76,10 @@ export default function Sidebar({ onClose }) {
 
       {/* ── Nav links ── */}
       <nav className="flex-1 px-2 py-2 flex flex-col gap-0.5 overflow-y-auto">
-        {links.map(({ to, label, icon: Icon, tourId }) => (
-          <NavLink key={to} to={to} end={to === '/'} onClick={onClose}>
-            {({ isActive }) => (
+        {links.map(({ to, label, icon: Icon, tourId }) => {
+          const isActive = isLinkActive(to)
+          return (
+            <NavLink key={to} to={to} onClick={onClose} className={() => ''}>
               <div id={tourId}
                 style={isActive ? {
                   background: dark ? '#0d2b1e' : '#ecfdf5',
@@ -91,9 +101,9 @@ export default function Sidebar({ onClose }) {
                   <span className="ml-auto rounded-full" style={{ width: 5, height: 5, background: dark ? '#34d399' : '#059669', flexShrink: 0 }} />
                 )}
               </div>
-            )}
-          </NavLink>
-        ))}
+            </NavLink>
+          )
+        })}
       </nav>
 
       {/* ── Divider ── */}

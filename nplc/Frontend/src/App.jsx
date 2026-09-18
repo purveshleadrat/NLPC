@@ -57,7 +57,7 @@ function RequireInitiative({ children }) {
     )
   }
   if (idFromRoute && !routeIdIsValid) {
-    return <Navigate to="/initiatives" replace />
+    return <Navigate to="/" replace />
   }
   if (!currentId) {
     return (
@@ -120,7 +120,8 @@ function Shell() {
             <Route path="/workspace" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />
             <Route path="/search" element={<GlobalSearch />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/integrations" element={<RequireInitiative><Integrations /></RequireInitiative>} />
+            <Route path="/integrations" element={<Integrations />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </main>

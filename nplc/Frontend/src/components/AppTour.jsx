@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
 
 const TOUR_KEY = 'nplc_tour_done'
@@ -51,6 +52,7 @@ const STEPS = [
 const SIDEBAR_TARGETS = new Set(['tour-initiatives', 'tour-search', 'tour-integrations', 'tour-settings'])
 
 export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
+  const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [cardTop, setCardTop] = useState(null)
   const current = STEPS[step]
@@ -61,6 +63,7 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
     try { localStorage.setItem(TOUR_KEY, '1') } catch { /* ignore */ }
     onCloseSidebar?.()
     onDone()
+    navigate('/integrations')
   }
 
   function next() { isLast ? finish() : setStep(s => s + 1) }
