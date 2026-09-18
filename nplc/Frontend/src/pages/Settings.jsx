@@ -15,7 +15,7 @@ export default function Settings() {
   const head  = dark ? 'text-gray-100' : 'text-gray-800'
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div>
         <h2 className={`text-[22px] font-bold ${head}`}>Settings</h2>
         <p className={`text-[14px] ${muted}`}>Manage appearance preferences for this workspace.</p>

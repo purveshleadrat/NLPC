@@ -6,13 +6,7 @@ import SideSheet from './SideSheet'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './ui/select'
-
-const PRIORITIES = [
-  { value: 'HIGH', label: 'High', dot: '#f87171' },
-  { value: 'MEDIUM', label: 'Medium', dot: '#fbbf24' },
-  { value: 'LOW', label: 'Low', dot: '#60a5fa' },
-]
+import PrioritySelect from './PrioritySelect'
 
 // Jira/GitHub fields only ever show up if the tenant already has a matching connection
 // configured in Settings - there is nothing to pick from otherwise, and showing an
@@ -120,24 +114,7 @@ export default function NewInitiativeModal({ onClose }) {
 
           <div>
             <label className={label}>Priority</label>
-            <Select value={priority} onValueChange={setPriority}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PRIORITIES.map(p => (
-                  <SelectItem key={p.value} value={p.value}>
-                    <span
-                      style={{
-                        display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
-                        background: p.dot, marginRight: 8, verticalAlign: 'middle',
-                      }}
-                    />
-                    {p.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <PrioritySelect value={priority} onChange={setPriority} />
           </div>
 
           {connections === null && (

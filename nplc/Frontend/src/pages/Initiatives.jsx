@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { LoadingScreen } from '../App'
 import { useNavigate } from 'react-router-dom'
-import { Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Eye, Trash2, Check, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
 import { getInitiativeConnections, getConnections, getSources, getEvents } from '../api/client'
 import NewInitiativeModal from '../components/NewInitiativeModal'
+import EditInitiativeSheet from '../components/EditInitiativeSheet'
 
 const PROJECT_COLORS = [
   '#22c55e', '#3b82f6', '#a855f7', '#f97316',
@@ -25,9 +26,7 @@ const PINNED_KEY = 'nplc_initiative_pinned'
 export default function Initiatives() {
   const { dark } = useTheme()
   const navigate = useNavigate()
-  const { initiatives, loading: initiativesLoading, select, rename, remove } = useInitiative()
-  const [renamingId, setRenamingId] = useState(null)
-  const [renameValue, setRenameValue] = useState('')
+  const { initiatives, loading: initiativesLoading, select, remove } = useInitiative()
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [summaries, setSummaries] = useState({}) // { [id]: { scopeLabel, ticketCount, commitCount, openCount, lastUpdated } }
   const [loadingSummaries, setLoadingSummaries] = useState(true)
@@ -36,6 +35,7 @@ export default function Initiatives() {
   const [sort, setSort] = useState('Recently updated')
   const [showSort, setShowSort] = useState(false)
   const [showNewModal, setShowNewModal] = useState(false)
+  const [editingInitiative, setEditingInitiative] = useState(null)
   const [pinned, setPinned] = useState(() => {
     try { return JSON.parse(localStorage.getItem(PINNED_KEY) || '[]') } catch { return [] }
   })
@@ -78,21 +78,6 @@ export default function Initiatives() {
   }, [initiatives])
 
   useEffect(() => { loadSummaries() }, [loadSummaries])
-
-  function startRename(init) {
-    setRenamingId(init.id)
-    setRenameValue(init.name)
-    setConfirmDeleteId(null)
-  }
-
-  async function commitRename(id) {
-    const value = renameValue.trim()
-    setRenamingId(null)
-    if (!value) return
-    const current = initiatives.find(i => i.id === id)
-    if (value === current?.name) return
-    try { await rename(id, value) } catch { /* keep old name displayed on failure */ }
-  }
 
   async function confirmDelete(id) {
     try { await remove(id) } finally { setConfirmDeleteId(null) }
@@ -235,13 +220,12 @@ export default function Initiatives() {
               const updated = relativeDate(s.lastUpdated)
               const color = PROJECT_COLORS[i % PROJECT_COLORS.length]
 
-              const isRenaming = renamingId === init.id
               const isConfirmingDelete = confirmDeleteId === init.id
 
               return (
                 <div
                   key={init.id}
-                  onClick={() => { if (!isRenaming) { select(init.id); navigate(`/initiatives/${init.id}`) } }}
+                  onClick={() => { select(init.id); navigate(`/initiatives/${init.id}`) }}
                   className={`rounded-xl px-[15px] py-[14px] cursor-pointer transition-all group relative ${card}`}
                 >
                   <div className="absolute top-3 right-3 flex items-center gap-1">
@@ -265,11 +249,18 @@ export default function Initiatives() {
                     ) : (
                       <>
                         <button
-                          onClick={e => { e.stopPropagation(); startRename(init) }}
-                          title="Rename"
+                          onClick={e => { e.stopPropagation(); setEditingInitiative(init) }}
+                          title="Edit"
                           className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
                         >
                           <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); select(init.id); navigate(`/initiatives/${init.id}`) }}
+                          title="View"
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
+                        >
+                          <Eye size={12} />
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); setConfirmDeleteId(init.id) }}
@@ -290,35 +281,20 @@ export default function Initiatives() {
 
                   <div className="flex items-center gap-[9px] mb-2 pr-16">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                    {isRenaming ? (
-                      <input
-                        autoFocus
-                        value={renameValue}
-                        onClick={e => e.stopPropagation()}
-                        onChange={e => setRenameValue(e.target.value)}
-                        onBlur={() => commitRename(init.id)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') commitRename(init.id)
-                          if (e.key === 'Escape') setRenamingId(null)
-                        }}
-                        className={`w-full font-bold text-[14.5px] tracking-[-0.2px] rounded px-1 -mx-1 outline-none ring-1 ring-emerald-400 ${dark ? 'bg-white/[0.06] text-gray-100' : 'bg-white text-gray-900'}`}
-                      />
-                    ) : (
-                      <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
-                    )}
+                    <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
                   </div>
 
                   {init.priority && PRIORITY_META[init.priority] && (
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: PRIORITY_META[init.priority].dot }} />
-                      <span className={`text-[10.5px] font-semibold uppercase tracking-wide ${PRIORITY_META[init.priority].text}`}>
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-px" style={{ background: PRIORITY_META[init.priority].dot }} />
+                      <span className={`text-[10.5px] leading-none font-semibold uppercase tracking-wide ${PRIORITY_META[init.priority].text}`}>
                         {PRIORITY_META[init.priority].label} priority
                       </span>
                     </div>
                   )}
 
                   {init.description && (
-                    <p className={`text-[12px] mb-2 line-clamp-2 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <p title={init.description} className={`text-[12px] mb-2 line-clamp-2 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {init.description}
                     </p>
                   )}
@@ -355,6 +331,9 @@ export default function Initiatives() {
       )}
 
       {showNewModal && <NewInitiativeModal onClose={() => setShowNewModal(false)} />}
+      {editingInitiative && (
+        <EditInitiativeSheet initiative={editingInitiative} onClose={() => setEditingInitiative(null)} />
+      )}
     </div>
   )
 }
