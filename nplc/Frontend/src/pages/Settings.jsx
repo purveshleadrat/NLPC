@@ -104,7 +104,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div>
         <h2 className={`text-[22px] font-bold ${head}`}>Settings</h2>
         <p className={`text-[14px] ${muted}`}>Manage the Jira, GitHub and SMTP connections for this workspace.</p>

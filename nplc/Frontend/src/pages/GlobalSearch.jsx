@@ -126,7 +126,7 @@ export default function GlobalSearch() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="space-y-5">
       <div>
         <h2 className={`text-[22px] font-bold ${head}`}>Global Search</h2>
         <p className={`text-[14px] ${muted}`}>Search across every initiative, source and decision.</p>
