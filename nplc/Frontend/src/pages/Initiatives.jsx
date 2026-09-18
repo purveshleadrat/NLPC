@@ -10,6 +10,11 @@ import EditInitiativeSheet from '../components/EditInitiativeSheet'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../components/ui/select'
 
 
+const PROJECT_COLORS = [
+  '#22c55e', '#3b82f6', '#a855f7', '#f97316',
+  '#ec4899', '#14b8a6', '#eab308', '#ef4444', '#10b981', '#0ea5e9',
+]
+
 const PRIORITY_META = {
   HIGH: { label: 'High', dot: '#f87171', text: 'text-red-400' },
   MEDIUM: { label: 'Medium', dot: '#fbbf24', text: 'text-amber-400' },
@@ -202,11 +207,10 @@ export default function Initiatives() {
       {!loading && !error && items.length > 0 && (
         <>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))' }}>
-            {processed.map((init, i) => {
-              const s = summaries[init.id] || {}
+            {items.map((init, i) => {
               const isPinned = pinned.includes(init.id)
-              const changed = isRecentlyChanged(init.id)
-              const updated = relativeDate(s.lastUpdated)
+              const changed = isRecentlyChanged(init.lastUpdated)
+              const updated = relativeDate(init.lastUpdated)
               const color = PROJECT_COLORS[i % PROJECT_COLORS.length]
 
               const isConfirmingDelete = confirmDeleteId === init.id
