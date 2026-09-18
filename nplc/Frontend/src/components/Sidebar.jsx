@@ -10,13 +10,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-
-const links = [
-  { to: '/initiatives', label: 'Initiatives', icon: Boxes, tourId: 'tour-initiatives' },
-  { to: '/search', label: 'Global Search', icon: SearchIcon, tourId: 'tour-search' },
-  { to: '/integrations', label: 'Integrations', icon: Plug, tourId: 'tour-integrations' },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon, tourId: 'tour-settings' },
-]
+import { useLanguage } from '../context/LanguageContext'
 
 // Paths that should keep the Initiatives nav item active
 const INITIATIVE_PATHS = ['/', '/workspace']
@@ -26,7 +20,15 @@ const SIDEBAR_DARK = '#0d1410'
 export default function Sidebar({ onClose }) {
   const { dark } = useTheme()
   const { tenant, logout } = useAuth()
+  const { t } = useLanguage()
   const location = useLocation()
+
+  const links = [
+    { to: '/initiatives', label: t('nav.initiatives'), icon: Boxes, tourId: 'tour-initiatives' },
+    { to: '/search', label: t('nav.globalSearch'), icon: SearchIcon, tourId: 'tour-search' },
+    { to: '/integrations', label: t('nav.integrations'), icon: Plug, tourId: 'tour-integrations' },
+    { to: '/settings', label: t('nav.settings'), icon: SettingsIcon, tourId: 'tour-settings' },
+  ]
 
   const bg          = dark ? SIDEBAR_DARK : '#ffffff'
   const borderColor = dark ? 'rgba(255,255,255,0.07)' : '#e5e7eb'
@@ -118,7 +120,7 @@ export default function Sidebar({ onClose }) {
             <span className="status-ping absolute inline-flex rounded-full" style={{ width: '100%', height: '100%', background: '#34d399', opacity: 0.5 }} />
             <span className="relative inline-flex rounded-full" style={{ width: 7, height: 7, background: '#34d399' }} />
           </span>
-          <span className="text-[11px] font-medium" style={{ color: textMuted }}>API Live · :4000</span>
+          <span className="text-[11px] font-medium" style={{ color: textMuted }}>{t('nav.apiLive')} · :4000</span>
         </div>
 
         <button
@@ -131,7 +133,7 @@ export default function Sidebar({ onClose }) {
           title="Sign out"
         >
           <LogOut size={11} />
-          {tenant?.tenantSlug ? `Sign out · ${tenant.tenantSlug}` : 'Sign out'}
+          {tenant?.tenantSlug ? `${t('nav.signOut')} · ${tenant.tenantSlug}` : t('nav.signOut')}
         </button>
 
         <p className="text-center mt-2 text-[9.5px] font-medium" style={{ color: dark ? '#374151' : '#9ca3af' }}>

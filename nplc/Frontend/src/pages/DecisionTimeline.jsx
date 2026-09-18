@@ -5,19 +5,20 @@ import { AlertTriangle, Search, GitCommit, Ticket, MessagesSquare, FileText } fr
 import { LoadingScreen } from '../App'
 import { useTheme } from '../context/ThemeContext'
 import { Badge } from '../components/ui/badge'
+import { useLanguage } from '../context/LanguageContext'
 
-// Maps a Source's raw type to how it's tagged/labelled in the unified feed.
+// Maps a Source's raw type to its tag key and icon/dot — label resolved via t() at render time.
 const SOURCE_TAG = {
-  ticket:          { label: 'Jira',        icon: Ticket,          dot: '#10b981' },
-  commit:          { label: 'Git',         icon: GitCommit,       dot: '#22c55e' },
-  meeting_note:    { label: 'Meeting',     icon: MessagesSquare,  dot: '#ef4444' },
-  requirement_doc: { label: 'Requirement', icon: FileText,        dot: '#14b8a6' },
-  design_ref:      { label: 'Design',      icon: FileText,        dot: '#0ea5e9' },
-  release_note:    { label: 'Release',     icon: FileText,        dot: '#f97316' },
-  transcript:      { label: 'Transcript',  icon: MessagesSquare,  dot: '#eab308' },
+  ticket:          { labelKey: 'timeline.tag.jira',        icon: Ticket,          dot: '#10b981' },
+  commit:          { labelKey: 'timeline.tag.git',         icon: GitCommit,       dot: '#22c55e' },
+  meeting_note:    { labelKey: 'timeline.tag.meeting',     icon: MessagesSquare,  dot: '#ef4444' },
+  requirement_doc: { labelKey: 'timeline.tag.requirement', icon: FileText,        dot: '#14b8a6' },
+  design_ref:      { labelKey: 'timeline.tag.design',      icon: FileText,        dot: '#0ea5e9' },
+  release_note:    { labelKey: 'timeline.tag.release',     icon: FileText,        dot: '#f97316' },
+  transcript:      { labelKey: 'timeline.tag.transcript',  icon: MessagesSquare,  dot: '#eab308' },
 }
 
-const CATEGORIES = ['All', 'Tickets', 'Commits']
+const CATEGORY_IDS = ['All', 'Tickets', 'Commits']
 
 function categoryOf(item) {
   if (item.kind === 'event') {
@@ -31,7 +32,7 @@ function categoryOf(item) {
   return null
 }
 
-function TimelineItem({ item, dark }) {
+function TimelineItem({ item, dark, t }) {
   const superseded = item.kind === 'event' && item.event.status === 'SUPERSEDED'
   const open = item.kind === 'event' && item.event.eventType === 'OPEN_QUESTION' && item.event.status === 'UNRESOLVED'
   const isDecision = item.kind === 'event' && item.event.eventType === 'DECISION'
@@ -66,13 +67,13 @@ function TimelineItem({ item, dark }) {
         <p className={`font-semibold text-[13.5px] flex items-center gap-2 flex-wrap ${title} ${superseded ? 'line-through' : ''}`}>
           {item.title}
           {superseded && (
-            <span className="badge-prototype badge-superseded">SUPERSEDED</span>
+            <span className="badge-prototype badge-superseded">{t('timeline.superseded')}</span>
           )}
           {isDecision && (
-            <span className="badge-prototype badge-decision">DECISION</span>
+            <span className="badge-prototype badge-decision">{t('timeline.decision')}</span>
           )}
           {open && (
-            <span className="badge-prototype badge-open">OPEN</span>
+            <span className="badge-prototype badge-open">{t('timeline.open')}</span>
           )}
         </p>
         <p className={`text-[12.5px] my-1 ${body}`}>{item.description}</p>
@@ -82,7 +83,7 @@ function TimelineItem({ item, dark }) {
               className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 flex-shrink-0"
               style={{ background: tag.dot }}
             />
-            <span className="font-medium text-gray-300 mr-1">{tag.label}</span>
+            <span className="font-medium text-gray-300 mr-1">{t(tag.labelKey)}</span>
             {item.source?.externalRef && (
               <span className="font-mono text-gray-400 text-[10.5px]">{item.source.externalRef}</span>
             )}
@@ -95,6 +96,7 @@ function TimelineItem({ item, dark }) {
 
 export default function DecisionTimeline({ refreshTick = 0 }) {
   const { dark } = useTheme()
+  const { t } = useLanguage()
   const [events, setEvents] = useState([])
   const [sources, setSources] = useState([])
   const [contradictions, setContradictions] = useState([])
@@ -128,7 +130,7 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
       key: `e-${e.id}`,
       date: e.eventDate,
       title: e.summary,
-      description: e.decidedBy ? `Decided by ${e.decidedBy}` : (e.affectedItems?.length ? `Affects: ${e.affectedItems.join(', ')}` : ''),
+      description: e.decidedBy ? t('timeline.decidedBy', { name: e.decidedBy }) : (e.affectedItems?.length ? t('timeline.affects', { items: e.affectedItems.join(', ') }) : ''),
       source: sourceById[e.sourceId] || null,
       event: e,
     }))
@@ -142,12 +144,12 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
         key: `s-${s.id}`,
         date: s.docDate,
         title: s.title,
-        description: s.author ? `by ${s.author}` : '',
+        description: s.author ? t('timeline.by', { author: s.author }) : '',
         source: s,
       }))
 
     return [...eventItems, ...rawSourceItems].sort((a, b) => new Date(b.date) - new Date(a.date))
-  }, [events, sources])
+  }, [events, sources, t])
 
   const filtered = items
     .filter(i => category === 'All' || categoryOf(i) === category)
@@ -166,10 +168,9 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
     <div className="w-full h-full flex flex-col">
 
       <div className="mb-4 max-w-4xl flex-shrink-0">
-        <h2 className={`text-[19px] font-bold tracking-[-0.3px] ${title}`}>Timeline</h2>
+        <h2 className={`text-[19px] font-bold tracking-[-0.3px] ${title}`}>{t('timeline.title')}</h2>
         <p className={`text-[13.5px] max-w-[66ch] ${muted}`}>
-          Everything that happened to this initiative, in order. Filter by type or search when it gets
-          long — superseded items stay visible, struck through.
+          {t('timeline.subtitle')}
         </p>
       </div>
 
@@ -180,17 +181,17 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search timeline..."
+            placeholder={t('timeline.searchPlaceholder')}
             className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-emerald-400 w-48 ${input}`}
           />
         </div>
-        {CATEGORIES.map(c => (
+        {CATEGORY_IDS.map(c => (
           <button
             key={c}
             onClick={() => setCategory(c)}
             className={`cursor-pointer ${category === c ? 'btn-prototype-pill-active' : 'btn-prototype-pill'}`}
           >
-            {c}
+            {c === 'All' ? t('timeline.filterAll') : c === 'Tickets' ? t('timeline.filterTickets') : t('timeline.filterCommits')}
           </button>
         ))}
       </div>
@@ -199,7 +200,7 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
         <div className="mb-5 rounded-xl p-3.5 bg-amber-500/10 border border-amber-500/20 max-w-4xl flex-shrink-0">
           <div className="flex items-center gap-2 mb-1.5 text-amber-400 font-semibold text-[13px]">
             <AlertTriangle size={13} />
-            {unresolved.length} unresolved contradiction{unresolved.length > 1 ? 's' : ''} detected
+            {t('timeline.contradictions', { n: unresolved.length, s: unresolved.length > 1 ? 's' : '' })}
           </div>
           {unresolved.map((c) => (
             <p key={c.id} className="text-[12.5px] text-amber-500/80 leading-relaxed">{c.description}</p>
@@ -212,20 +213,20 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 text-[13px] max-w-4xl">
-            Failed to load: {error}
+            {t('timeline.failedLoad', { error })}
           </div>
         )}
 
         {!loading && !error && filtered.length === 0 && (
           <div className={`w-full flex flex-col items-center justify-center min-h-[360px] text-center ${muted}`}>
-            <p className="text-[13.5px]">No events yet. Ingest a source to populate the timeline.</p>
+            <p className="text-[13.5px]">{t('timeline.empty')}</p>
           </div>
         )}
 
         {!loading && !error && filtered.length > 0 && (
           <div className="max-w-4xl">
             {filtered.map((item) => (
-              <TimelineItem key={item.key} item={item} dark={dark} />
+              <TimelineItem key={item.key} item={item} dark={dark} t={t} />
             ))}
           </div>
         )}

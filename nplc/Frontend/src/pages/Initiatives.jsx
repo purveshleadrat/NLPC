@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Star, ChevronDown, ChevronLeft, ChevronRight, Plus, GitCommitHorizontal, Ticket, Pencil, Eye, Trash2, Check, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
+import { useLanguage } from '../context/LanguageContext'
 import { getInitiativesList } from '../api/client'
 import NewInitiativeModal from '../components/NewInitiativeModal'
 import EditInitiativeSheet from '../components/EditInitiativeSheet'
@@ -21,25 +22,41 @@ const PRIORITY_META = {
   LOW: { label: 'Low', dot: '#60a5fa', text: 'text-blue-400' },
 }
 
-const SORT_OPTIONS = [
-  { label: 'Recently updated', value: 'updated_desc' },
-  { label: 'Name (A–Z)', value: 'name_asc' },
-  { label: 'Most tickets', value: 'most_tickets' },
-]
-const FILTERS = ['All', 'Recently changed', 'Pinned']
 const PINNED_KEY = 'nplc_initiative_pinned'
 const PAGE_SIZE_OPTIONS = [6, 12, 24, 48]
 const CHANGED_WINDOW_MS = 14 * 24 * 60 * 60 * 1000
 
 export default function Initiatives() {
   const { dark } = useTheme()
+  const { t } = useLanguage()
   const navigate = useNavigate()
+
+  // Internal sort/filter values stay as English keys so logic comparisons always work regardless of language
+  const SORT_KEYS = ['Recently updated', 'Name (A–Z)', 'Most tickets']
+  const FILTER_KEYS = ['All', 'Recently changed', 'Pinned']
+
+  const SORT_LABEL = {
+    'Recently updated': t('initiatives.sortRecent'),
+    'Name (A–Z)': t('initiatives.sortName'),
+    'Most tickets': t('initiatives.sortTickets'),
+  }
+  const SORT_VALUE = {
+    'Recently updated': 'updated_desc',
+    'Name (A–Z)': 'name_asc',
+    'Most tickets': 'most_tickets',
+  }
+  const FILTER_LABEL = {
+    'All': t('initiatives.filterAll'),
+    'Recently changed': t('initiatives.filterRecent'),
+    'Pinned': t('initiatives.filterPinned'),
+  }
+
   const { select, remove } = useInitiative()
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filter, setFilter] = useState('All')
-  const [sort, setSort] = useState(SORT_OPTIONS[0])
+  const [sort, setSort] = useState('Recently updated')
   const [showSort, setShowSort] = useState(false)
   const [showNewModal, setShowNewModal] = useState(false)
   const [editingInitiative, setEditingInitiative] = useState(null)
@@ -76,7 +93,7 @@ export default function Initiatives() {
     getInitiativesList({
       page,
       size: pageSize,
-      sort: sort.value,
+      sort: SORT_VALUE[sort],
       search: debouncedSearch,
       filter: filter === 'Recently changed' ? 'changed' : undefined,
       ids: filter === 'Pinned' ? pinned : undefined,
@@ -129,21 +146,21 @@ export default function Initiatives() {
     <div className="min-h-full flex flex-col">
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <h2 className={`text-[19px] font-bold tracking-[-0.3px] mb-[3px] ${title}`}>
-            Initiatives <span className={`font-normal text-[13px] ${muted}`}>· {data.totalElements}</span>
-          </h2>
-          <p className={`text-[13.5px] max-w-[66ch] ${muted}`}>
-            Search, filter and sort — built to stay usable whether your team owns three initiatives or
-            three hundred. Click one to open its memory.
-          </p>
+          <h2 className={`text-[19px] font-bold tracking-[-0.3px] mb-[3px] ${title}`}>{t('initiatives.title')} <span className={`font-normal text-[13px] ${muted}`}>· {data.totalElements}</span></h2>
+          <p className={`text-[13.5px] max-w-[66ch] ${muted}`}>{t('initiatives.subtitleDesc')}</p>
         </div>
         <button
           onClick={() => setShowNewModal(true)}
           className="btn-prototype-primary cursor-pointer flex-shrink-0"
         >
-          <Plus size={12} /> New initiative
+          <Plus size={12} /> {t('initiatives.new')}
         </button>
       </div>
+
+      <div className="mb-4 mt-5">
+        <h3 className={`text-[19px] font-bold mb-[3px] tracking-[-0.3px] ${title}`}>{t('initiatives.allTitle')}</h3>
+      </div>
+
 
       <div className="flex items-center gap-2 mb-5 flex-wrap">
         <div className="relative">
@@ -152,18 +169,18 @@ export default function Initiatives() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name..."
+            placeholder={t('initiatives.searchPlaceholder')}
             className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-emerald-400 w-48 ${input}`}
           />
         </div>
 
-        {FILTERS.map(f => (
+        {FILTER_KEYS.map(fk => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`cursor-pointer ${filter === f ? 'btn-prototype-pill-active' : 'btn-prototype-pill'}`}
+            key={fk}
+            onClick={() => setFilter(fk)}
+            className={`cursor-pointer ${filter === fk ? 'btn-prototype-pill-active' : 'btn-prototype-pill'}`}
           >
-            {f === 'Pinned' ? <><Star size={10} className="inline mr-1" />{f}</> : f}
+            {fk === 'Pinned' ? <><Star size={10} className="inline mr-1" />{FILTER_LABEL[fk]}</> : FILTER_LABEL[fk]}
           </button>
         ))}
 
@@ -172,17 +189,17 @@ export default function Initiatives() {
             onClick={() => setShowSort(s => !s)}
             className="btn-prototype-tab flex items-center gap-1.5 cursor-pointer"
           >
-            Sort: {sort.label}<ChevronDown size={11} />
+            {t('initiatives.sortLabel')}: {SORT_LABEL[sort]}<ChevronDown size={11} />
           </button>
           {showSort && (
             <div className={`absolute right-0 top-full mt-1 rounded-[7px] shadow-lg z-10 min-w-[160px] py-1 border ${dark ? 'bg-[#15151f] border-white/10' : 'bg-white border-gray-200'}`}>
-              {SORT_OPTIONS.map(o => (
+              {SORT_KEYS.map(sk => (
                 <button
-                  key={o.value}
-                  onClick={() => { setSort(o); setShowSort(false) }}
-                  className={`w-full text-left px-3 py-1.5 text-[12px] font-medium cursor-pointer ${sort.value === o.value ? 'text-blue-400' : dark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
+                  key={sk}
+                  onClick={() => { setSort(sk); setShowSort(false) }}
+                  className={`w-full text-left px-3 py-1.5 text-[12px] font-medium cursor-pointer ${sort === sk ? 'text-blue-400' : dark ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
                 >
-                  {o.label}
+                  {SORT_LABEL[sk]}
                 </button>
               ))}
             </div>
@@ -200,12 +217,13 @@ export default function Initiatives() {
 
       {!loading && !error && items.length === 0 && (
         <div className={`text-center py-20 border-2 border-dashed rounded-xl text-[13px] ${dark ? 'border-white/10 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
-          No initiatives found.
+          {t('initiatives.empty')}
         </div>
       )}
 
       {!loading && !error && items.length > 0 && (
         <>
+          <p className={`text-[12px] mb-3 ${muted}`}>{t('initiatives.count', { n: processed.length })}</p>
           <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))' }}>
             {items.map((init, i) => {
               const isPinned = pinned.includes(init.id)
@@ -293,26 +311,26 @@ export default function Initiatives() {
                   )}
 
                   <p className={`text-[11.5px] mb-2.5 ${muted}`}>
-                    {init.scopeLabel || 'No connections'}{updated && <> · updated {updated}</>}
+                    {init.scopeLabel || t('initiatives.noConnections')}{updated && <> · {t('initiatives.updated')} {updated}</>}
                   </p>
 
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[5px] border ${dark ? 'bg-white/[0.03] border-white/10 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                      <Ticket size={10} className="opacity-70" />{init.ticketCount ?? 0} tickets
+                      <Ticket size={10} className="opacity-70" />{init.ticketCount ?? 0} {t('initiatives.tickets')}
                     </span>
                     {init.commitCount > 0 && (
                       <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-[5px] border ${dark ? 'bg-white/[0.03] border-white/10 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                        <GitCommitHorizontal size={10} className="opacity-70" />{init.commitCount} commits
+                        <GitCommitHorizontal size={10} className="opacity-70" />{init.commitCount} {t('initiatives.commits')}
                       </span>
                     )}
                     {changed && (
                       <span className="badge-prototype badge-decision">
-                        changed
+                        {t('initiatives.changed')}
                       </span>
                     )}
                     {init.openCount > 0 && (
                       <span className="badge-prototype badge-open">
-                        {init.openCount} open
+                        {init.openCount} {t('initiatives.open')}
                       </span>
                     )}
                   </div>

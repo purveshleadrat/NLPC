@@ -4,11 +4,13 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Brain, Loader2, LogIn, UserPlus, Eye, EyeOff, Zap, GitBranch, Layers, Search } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/i
 
 export default function Login() {
   const { login, signup } = useAuth()
+  const { t } = useLanguage()
   const location = useLocation()
   const mode = location.pathname === '/sign-up' ? 'signup' : 'login'
   const [loading, setLoading] = useState(false)
@@ -107,28 +109,28 @@ export default function Login() {
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 13px', borderRadius: 99, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', marginBottom: 22 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', display: 'inline-block', boxShadow: '0 0 8px #34d399' }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#6ee7b7', letterSpacing: '.12em', textTransform: 'uppercase' }}>AI-Powered Product Memory</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#6ee7b7', letterSpacing: '.12em', textTransform: 'uppercase' }}>{t('login.badge')}</span>
           </div>
 
           <h1 style={{ fontSize: 58, fontWeight: 900, lineHeight: 1.04, letterSpacing: '-3px', margin: 0, marginBottom: 20 }}>
-            <span style={{ color: '#fff', display: 'block' }}>Never lose</span>
+            <span style={{ color: '#fff', display: 'block' }}>{t('login.headline1')}</span>
             <span style={{ display: 'block', background: 'linear-gradient(90deg,#34d399 0%,#10b981 50%,#14b8a6 100%)', backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'shimmer 4s linear infinite' }}>
-              context again.
+              {t('login.headline2')}
             </span>
           </h1>
 
           <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.35)', lineHeight: 1.75, maxWidth: 420, margin: 0 }}>
-            One place for every decision, ticket, commit &amp; open question — so your whole team always knows <em style={{ color: 'rgba(52,211,153,0.7)', fontStyle: 'normal', fontWeight: 600 }}>why</em>.
+            {t('login.tagline')} <em style={{ color: 'rgba(52,211,153,0.7)', fontStyle: 'normal', fontWeight: 600 }}>{t('login.why')}</em>.
           </p>
         </div>
 
         {/* Feature list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {[
-            { icon: Zap, color: '#fbbf24', label: 'AI Q&A', desc: 'Ask anything about your product in plain English' },
-            { icon: Layers, color: '#60a5fa', label: 'Decision Timeline', desc: 'Every decision logged with full context & rationale' },
-            { icon: GitBranch, color: '#a78bfa', label: 'Jira & Git Sync', desc: 'Tickets and commits auto-linked to initiatives' },
-            { icon: Search, color: '#34d399', label: 'Semantic Search', desc: 'Find anything across all initiatives instantly' },
+            { icon: Zap, color: '#fbbf24', label: t('login.feat1Label'), desc: t('login.feat1Desc') },
+            { icon: Layers, color: '#60a5fa', label: t('login.feat2Label'), desc: t('login.feat2Desc') },
+            { icon: GitBranch, color: '#a78bfa', label: t('login.feat3Label'), desc: t('login.feat3Desc') },
+            { icon: Search, color: '#34d399', label: t('login.feat4Label'), desc: t('login.feat4Desc') },
           ].map(({ icon: Icon, color, label, desc }, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, animation: `card-in .4s ease ${i * 0.08}s both` }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}14`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -159,25 +161,23 @@ export default function Login() {
           </div>
 
           <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-0.6px' }}>
-            {mode === 'signup' ? 'Create workspace' : 'Welcome back'}
+            {mode === 'signup' ? t('login.createWorkspace') : t('login.welcomeBack')}
           </div>
           <div style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.3)', marginBottom: 32, lineHeight: 1.6 }}>
-            {mode === 'signup'
-              ? 'One workspace, one shared password for your team.'
-              : 'Sign in to your workspace to continue.'}
+            {mode === 'signup' ? t('login.createSubtitle') : t('login.signInSubtitle')}
           </div>
 
           <form onSubmit={handleSubmit(submit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             {mode === 'signup' && (
               <div>
-                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>Workspace name</label>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>{t('login.workspaceName')}</label>
                 <input className="login-input" placeholder="Acme Product Team" {...register('tenantName', { required: 'Required' })} />
                 {errors.tenantName && <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.tenantName.message}</p>}
               </div>
             )}
 
             <div>
-              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>Workspace slug</label>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>{t('login.workspaceSlug')}</label>
               <input className="login-input" placeholder="acme" autoCapitalize="none" autoCorrect="off"
                 {...register('tenantSlug', {
                   required: 'Required',
@@ -189,7 +189,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>Password</label>
+              <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: 7, letterSpacing: '.07em', textTransform: 'uppercase' }}>{t('login.password')}</label>
               <div style={{ position: 'relative' }}>
                 <input className="login-input" type={showPassword ? 'text' : 'password'} placeholder="••••••••" style={{ paddingRight: 44 }}
                   {...register('password', {
@@ -205,25 +205,25 @@ export default function Login() {
               </div>
               {errors.password
                 ? <p style={{ fontSize: 11.5, color: '#f87171', marginTop: 5 }}>{errors.password.message}</p>
-                : mode === 'signup' && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 5 }}>Minimum 8 characters</p>}
+                : mode === 'signup' && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 5 }}>{t('login.minChars')}</p>}
             </div>
 
             <button type="submit" disabled={loading} className="login-btn" style={{ marginTop: 4 }}>
               {loading
-                ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />Please wait…</>
+                ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />{t('login.pleaseWait')}</>
                 : mode === 'signup'
-                  ? <><UserPlus size={14} />Create workspace</>
-                  : <><LogIn size={14} />Sign in</>}
+                  ? <><UserPlus size={14} />{t('login.createWorkspace')}</>
+                  : <><LogIn size={14} />{t('login.signIn')}</>}
             </button>
           </form>
 
           <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '26px 0' }} />
 
           <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.22)', margin: 0 }}>
-            {mode === 'signup' ? 'Already have a workspace? ' : "Don't have a workspace? "}
+            {mode === 'signup' ? t('login.alreadyHave') : t('login.dontHave')}{' '}
             <Link to={mode === 'signup' ? '/sign-in' : '/sign-up'}
               style={{ fontWeight: 700, fontSize: 13, background: 'linear-gradient(90deg,#34d399,#14b8a6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              {mode === 'signup' ? 'Sign in' : 'Create one'}
+              {mode === 'signup' ? t('login.signIn') : t('login.createOne')}
             </Link>
           </p>
         </div>
