@@ -165,16 +165,16 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
     : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full flex flex-col">
 
-      <div className="mb-4 max-w-4xl">
+      <div className="mb-4 max-w-4xl flex-shrink-0">
         <h2 className={`text-[19px] font-bold tracking-[-0.3px] ${title}`}>{t('timeline.title')}</h2>
         <p className={`text-[13.5px] max-w-[66ch] ${muted}`}>
           {t('timeline.subtitle')}
         </p>
       </div>
 
-      <div className="flex items-center gap-2 mb-5 flex-wrap">
+      <div className="flex items-center gap-2 mb-5 flex-wrap flex-shrink-0">
         <div className="relative">
           <Search size={11} className={`absolute left-3 top-1/2 -translate-y-1/2 ${muted}`} />
           <input
@@ -197,7 +197,7 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
       </div>
 
       {unresolved.length > 0 && (
-        <div className="mb-5 rounded-xl p-3.5 bg-amber-500/10 border border-amber-500/20 max-w-4xl">
+        <div className="mb-5 rounded-xl p-3.5 bg-amber-500/10 border border-amber-500/20 max-w-4xl flex-shrink-0">
           <div className="flex items-center gap-2 mb-1.5 text-amber-400 font-semibold text-[13px]">
             <AlertTriangle size={13} />
             {t('timeline.contradictions', { n: unresolved.length, s: unresolved.length > 1 ? 's' : '' })}
@@ -208,27 +208,29 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
         </div>
       )}
 
-      {loading && <LoadingScreen dark={dark} />}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {loading && <LoadingScreen dark={dark} />}
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 text-[13px] max-w-4xl">
-          {t('timeline.failedLoad', { error })}
-        </div>
-      )}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-4 py-3 text-[13px] max-w-4xl">
+            {t('timeline.failedLoad', { error })}
+          </div>
+        )}
 
-      {!loading && !error && filtered.length === 0 && (
-        <div className={`w-full flex flex-col items-center justify-center min-h-[360px] text-center ${muted}`}>
-          <p className="text-[13.5px]">{t('timeline.empty')}</p>
-        </div>
-      )}
+        {!loading && !error && filtered.length === 0 && (
+          <div className={`w-full flex flex-col items-center justify-center min-h-[360px] text-center ${muted}`}>
+            <p className="text-[13.5px]">{t('timeline.empty')}</p>
+          </div>
+        )}
 
-      {!loading && !error && filtered.length > 0 && (
-        <div className="max-w-4xl">
-          {filtered.map((item) => (
-            <TimelineItem key={item.key} item={item} dark={dark} t={t} />
-          ))}
-        </div>
-      )}
+        {!loading && !error && filtered.length > 0 && (
+          <div className="max-w-4xl">
+            {filtered.map((item) => (
+              <TimelineItem key={item.key} item={item} dark={dark} t={t} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

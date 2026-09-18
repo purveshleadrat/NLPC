@@ -134,7 +134,7 @@ export default function AskContext() {
     : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-emerald-400 focus:ring-emerald-100'
 
   return (
-    <div className="max-w-4xl flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
+    <div className="max-w-4xl h-full flex flex-col">
 
       {/* Example pills */}
       <div className="flex flex-wrap gap-1.5 mb-4 flex-shrink-0 items-center">

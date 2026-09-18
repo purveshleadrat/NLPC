@@ -1,7 +1,9 @@
 package com.hackathon.productmemory.controller;
 
+import com.hackathon.productmemory.dto.InitiativeListDtos.InitiativeListPage;
 import com.hackathon.productmemory.entity.Initiative;
 import com.hackathon.productmemory.entity.InitiativeConnection;
+import com.hackathon.productmemory.service.InitiativeListService;
 import com.hackathon.productmemory.service.InitiativeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +20,11 @@ import java.util.List;
 public class InitiativeController {
 
     private final InitiativeService initiativeService;
+    private final InitiativeListService initiativeListService;
 
-    public InitiativeController(InitiativeService initiativeService) {
+    public InitiativeController(InitiativeService initiativeService, InitiativeListService initiativeListService) {
         this.initiativeService = initiativeService;
+        this.initiativeListService = initiativeListService;
     }
 
     // POST /initiatives  body: { "name": "..." }
@@ -36,6 +40,28 @@ public class InitiativeController {
     @GetMapping
     public List<Initiative> list() {
         return initiativeService.findAll();
+    }
+
+    // GET /initiatives/list?page=0&size=20&sort=updated_desc|name_asc|most_tickets
+    //                       &search=...&filter=open|changed[&ids=a,b,c]
+    // One aggregate query for the list page's cards (ticket/commit/open counts, scope
+    // label, last-updated) instead of the 1 + 3N per-initiative calls the frontend used to
+    // make. Deliberately a separate endpoint from GET /initiatives above: that one stays a
+    // plain, unfiltered list because other parts of the app (initiative selection, the
+    // sidebar, the workspace header) resolve initiatives by id and don't need any of this.
+    //
+    // ids, when present, ignores page/size/search/filter and returns exactly those ids
+    // (still tenant-checked) - it's how the frontend's client-only "Pinned" tab asks for a
+    // specific set of initiatives that may span several pages of the default ordering.
+    @GetMapping("/list")
+    public InitiativeListPage listPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "updated_desc") String sort,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String filter,
+            @RequestParam(required = false) List<String> ids) {
+        return initiativeListService.list(page, size, sort, search, filter, ids);
     }
 
     // GET /initiatives/{id}
