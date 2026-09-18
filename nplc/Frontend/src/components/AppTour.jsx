@@ -141,7 +141,7 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
               App Tour · {step + 1}/{STEPS.length}
             </span>
           </div>
-          <button onClick={finish} className="text-gray-500 hover:text-gray-300 transition-colors">
+          <button type="button" onClick={finish} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">
             <X size={15} />
           </button>
         </div>
@@ -164,17 +164,18 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
         {/* Navigation */}
         <div className="flex items-center justify-between">
           <button
+            type="button"
             onClick={prev}
             disabled={step === 0}
-            className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
+            className="flex items-center gap-1 text-[12px] text-gray-500 hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
             <ChevronLeft size={14} /> Back
           </button>
 
           <div className="flex gap-1.5">
             {STEPS.map((_, i) => (
-              <button key={i} onClick={() => setStep(i)}
-                className="rounded-full transition-all"
+              <button type="button" key={i} onClick={() => setStep(i)}
+                className="rounded-full transition-all cursor-pointer"
                 style={{
                   width: i === step ? 16 : 6, height: 6,
                   background: i === step ? '#34d399' : 'rgba(255,255,255,0.15)',
@@ -183,8 +184,9 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
           </div>
 
           <button
+            type="button"
             onClick={next}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-all cursor-pointer"
             style={{ background: 'linear-gradient(135deg, #059669, #0d9488)', boxShadow: '0 2px 8px rgba(5,150,105,0.4)' }}
           >
             {isLast ? 'Get started' : 'Next'} {!isLast && <ChevronRight size={14} />}

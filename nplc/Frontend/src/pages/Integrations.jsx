@@ -136,7 +136,7 @@ export default function Integrations() {
                     <span className={`text-[13px] font-semibold flex-1 truncate ${head}`}>{c.label}</span>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button onClick={() => removeConnection(c.id)}
-                        className={`p-1.5 rounded-lg transition-colors ${dark ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}>
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${dark ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-500 hover:bg-red-50'}`}>
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -165,7 +165,7 @@ export default function Integrations() {
         <div className="flex gap-2 mb-4">
           {PROVIDERS.map(({ id, label: plabel, icon: Icon }) => (
             <button key={id} onClick={() => setForm(BLANK[id])}
-              className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold transition-all ${form.provider === id
+              className={`flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-[12.5px] font-semibold transition-all cursor-pointer ${form.provider === id
                 ? 'brand-gradient text-white'
                 : dark ? 'bg-white/[0.05] text-gray-400 hover:bg-white/[0.08]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
               <Icon size={12} /> {plabel}
@@ -203,7 +203,7 @@ export default function Integrations() {
 
           <div className="flex justify-end">
             <button type="submit" disabled={saving}
-              className="inline-flex items-center justify-center gap-2 brand-gradient text-white px-4 py-2.5 rounded-xl text-[13.5px] font-semibold hover:opacity-90 disabled:opacity-50 transition-all">
+              className="inline-flex items-center justify-center gap-2 brand-gradient text-white px-4 py-2.5 rounded-xl text-[13.5px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all">
               {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
               {saving ? 'Saving…' : 'Add connection'}
             </button>

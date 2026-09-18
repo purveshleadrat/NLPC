@@ -62,8 +62,9 @@ export default function Sidebar({ onClose }) {
           </div>
           {onClose && (
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg transition-colors flex-shrink-0"
+              className="p-1.5 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
               style={{ color: textMuted }}
               onMouseEnter={e => { e.currentTarget.style.color = dark ? '#e5e7eb' : '#111827' }}
               onMouseLeave={e => { e.currentTarget.style.color = textMuted }}
@@ -121,8 +122,9 @@ export default function Sidebar({ onClose }) {
         </div>
 
         <button
+          type="button"
           onClick={logout}
-          className="w-full flex items-center justify-center gap-1.5 rounded-[7px] px-2 py-1.5 text-[11px] font-medium transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 rounded-[7px] px-2 py-1.5 text-[11px] font-medium transition-colors cursor-pointer"
           style={{ background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${borderColor}`, color: textMuted }}
           onMouseEnter={e => { e.currentTarget.style.color = '#f87171' }}
           onMouseLeave={e => { e.currentTarget.style.color = textMuted }}

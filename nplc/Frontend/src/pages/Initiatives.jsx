@@ -270,7 +270,7 @@ export default function Initiatives() {
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); togglePin(init.id) }}
-                          className={`transition-colors ${isPinned ? 'text-yellow-400' : dark ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
+                          className={`transition-colors cursor-pointer ${isPinned ? 'text-yellow-400' : dark ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
                         >
                           <Star size={13} fill={isPinned ? 'currentColor' : 'none'} />
                         </button>
