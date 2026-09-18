@@ -147,11 +147,11 @@ export default function Login() {
       <div className="hidden lg:block" style={{ width: 1, background: 'rgba(255,255,255,0.06)', flexShrink: 0 }} />
 
       {/* ── Right: form ── */}
-      <div style={{ width: 460, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 44px', position: 'relative', zIndex: 1 }}>
+      <div className="w-full lg:w-[460px] lg:flex-shrink-0" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', position: 'relative', zIndex: 1 }}>
         <div className="form-card" style={{ width: '100%' }}>
 
           {/* Mobile brand */}
-          <div className="lg:hidden" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 36 }}>
+          <div className="flex lg:hidden" style={{ alignItems: 'center', gap: 10, marginBottom: 36 }}>
             <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg,#059669,#10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Brain size={18} color="#fff" />
             </div>

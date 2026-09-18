@@ -58,6 +58,7 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
   const current = STEPS[step]
   const isLast = step === STEPS.length - 1
   const isSidebarStep = current.target && SIDEBAR_TARGETS.has(current.target)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
 
   function finish() {
     try { localStorage.setItem(TOUR_KEY, '1') } catch { /* ignore */ }
@@ -101,25 +102,25 @@ export default function AppTour({ onDone, onOpenSidebar, onCloseSidebar }) {
     }
   }, [current.target])
 
-  // Card positioning
-  const cardStyle = isSidebarStep && cardTop !== null
+  // Card positioning — on mobile always center; on desktop offset next to sidebar
+  const cardStyle = isSidebarStep && cardTop !== null && !isMobile
     ? { left: 232, top: cardTop, transform: 'none' }
     : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
 
   return (
     <>
-      {/* Backdrop — excludes sidebar area on sidebar steps */}
+      {/* Backdrop — excludes sidebar area on desktop sidebar steps */}
       <div className="fixed z-[998] pointer-events-none"
         style={{
           top: 0, bottom: 0,
-          left: isSidebarStep ? 220 : 0,
+          left: isSidebarStep && !isMobile ? 220 : 0,
           right: 0,
           background: 'rgba(0,0,0,0.55)',
           backdropFilter: 'blur(2px)',
         }} />
 
-      {/* Arrow pointing to sidebar (sidebar steps only) */}
-      {isSidebarStep && cardTop !== null && (
+      {/* Arrow pointing to sidebar (desktop sidebar steps only) */}
+      {isSidebarStep && cardTop !== null && !isMobile && (
         <div className="fixed z-[1000]" style={{ left: 224, top: cardTop + 100, transform: 'translateY(-50%)' }}>
           <div style={{
             width: 0, height: 0,
