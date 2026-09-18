@@ -48,9 +48,17 @@ function RequireInitiative({ children }) {
 function Shell() {
   const { dark } = useTheme()
   return (
-    <div className="min-h-screen flex" style={{ background: dark ? '#0d0d1a' : '#f3f4f6' }}>
+    <div className="min-h-screen flex" style={{ background: dark ? '#06060f' : '#f3f4f6', position: 'relative', overflow: 'hidden' }}>
+      {dark && (
+        <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+          <div style={{ position: 'absolute', width: 700, height: 700, borderRadius: '50%', top: '-20%', left: '-5%', background: 'radial-gradient(circle at center, rgba(16,185,129,0.1) 0%, transparent 60%)' }} />
+          <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', bottom: '-18%', right: '-5%', background: 'radial-gradient(circle at center, rgba(20,184,166,0.08) 0%, transparent 60%)' }} />
+          <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', top: '35%', left: '50%', background: 'radial-gradient(circle at center, rgba(5,150,105,0.07) 0%, transparent 60%)' }} />
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(16,185,129,0.03) 1px, transparent 1px), linear-gradient(90deg,rgba(16,185,129,0.03) 1px,transparent 1px)', backgroundSize: '48px 48px' }} />
+        </div>
+      )}
       <Sidebar />
-      <main className="ml-56 flex-1 p-8 overflow-y-auto">
+      <main className="ml-56 flex-1 p-8 overflow-y-auto" style={{ position: 'relative', zIndex: 1 }}>
         <Routes>
           <Route path="/" element={<Initiatives />} />
           <Route path="/workspace" element={<RequireInitiative><InitiativeWorkspace /></RequireInitiative>} />

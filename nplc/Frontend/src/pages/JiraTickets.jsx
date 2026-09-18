@@ -143,7 +143,7 @@ export default function JiraTickets() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name or key..."
-            className="pl-8 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white w-52"
+            className="pl-8 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white w-52"
           />
         </div>
 
@@ -166,7 +166,7 @@ export default function JiraTickets() {
                 <button
                   key={o}
                   onClick={() => { setSort(o); setShowSort(false) }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${sort === o ? 'text-indigo-600 font-medium' : 'text-gray-700'}`}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${sort === o ? 'text-emerald-600 font-medium' : 'text-gray-700'}`}
                 >
                   {o}
                 </button>
@@ -211,7 +211,7 @@ export default function JiraTickets() {
                 <div
                   key={p.id}
                   onClick={() => navigate(`/jira/${p.key}`)}
-                  className="bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all group relative"
+                  className="bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:border-emerald-300 hover:shadow-md transition-all group relative"
                 >
                   <button
                     onClick={e => { e.stopPropagation(); togglePin(p.key) }}
@@ -236,7 +236,7 @@ export default function JiraTickets() {
                     }
                     {bc > 0 && <Chip icon={<GitCommitHorizontal size={10} />}>{bc} {bc === 1 ? 'branch' : 'branches'}</Chip>}
                     {changed && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
                         changed
                       </span>
                     )}

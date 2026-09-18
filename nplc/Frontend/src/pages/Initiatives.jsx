@@ -8,7 +8,7 @@ import NewInitiativeModal from '../components/NewInitiativeModal'
 
 const PROJECT_COLORS = [
   '#22c55e', '#3b82f6', '#a855f7', '#f97316',
-  '#ec4899', '#14b8a6', '#eab308', '#ef4444', '#6366f1', '#0ea5e9',
+  '#ec4899', '#14b8a6', '#eab308', '#ef4444', '#10b981', '#0ea5e9',
 ]
 
 const SORT_OPTIONS = ['Recently updated', 'Name (A–Z)', 'Most tickets']
@@ -134,7 +134,7 @@ export default function Initiatives() {
 
   const loading = initiativesLoading || loadingSummaries
 
-  const card = dark ? 'bg-white/[0.03] border border-white/[0.07] hover:border-indigo-400/40' : 'bg-white border border-gray-200 hover:border-indigo-300'
+  const card = dark ? 'bg-white/[0.03] border border-white/[0.07] hover:border-emerald-400/40' : 'bg-white border border-gray-200 hover:border-emerald-300'
   const title = dark ? 'text-gray-100' : 'text-gray-900'
   const muted = dark ? 'text-gray-500' : 'text-gray-400'
   const input = dark

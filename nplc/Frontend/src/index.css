@@ -10,8 +10,8 @@
   --muted-foreground: #6b7280;
   --border: #e5e7eb;
   --input: #e5e7eb;
-  --ring: #6366f1;
-  --primary: #4f46e5;
+  --ring: #10b981;
+  --primary: #059669;
   --primary-foreground: #ffffff;
   --secondary: #f3f4f6;
   --secondary-foreground: #111827;
@@ -23,14 +23,14 @@
 }
 
 .dark {
-  --background: #12121a;
+  --background: #06060f;
   --foreground: #f3f4f6;
   --muted: rgba(255, 255, 255, 0.04);
   --muted-foreground: #9ca3af;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.1);
-  --ring: #818cf8;
-  --primary: #6366f1;
+  --ring: #34d399;
+  --primary: #10b981;
   --primary-foreground: #ffffff;
   --secondary: rgba(255, 255, 255, 0.06);
   --secondary-foreground: #f3f4f6;
@@ -78,12 +78,12 @@ input,select,textarea,button { font-family: inherit; font-size: 13.5px; }
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.55); }
+::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(16,185,129,0.55); }
 
 /* ── Sidebar ── */
 .sidebar-bg {
-  background: #131320;
+  background: #0a0a15;
 }
 .sidebar-bg-light {
   background: #1e1b4b;
@@ -91,15 +91,15 @@ input,select,textarea,button { font-family: inherit; font-size: 13.5px; }
 
 /* ── Gradient text ── */
 .gradient-text {
-  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  background: linear-gradient(135deg, #34d399, #14b8a6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 /* ── Brand gradient ── */
-.brand-gradient { background: #2563eb; }
-.brand-gradient-hover:hover { background: #1d4ed8; }
+.brand-gradient { background: linear-gradient(135deg, #059669, #10b981); }
+.brand-gradient-hover:hover { background: linear-gradient(135deg, #047857, #059669); }
 
 /* ── Glass cards ── */
 .glass-dark {
@@ -137,7 +137,7 @@ input,select,textarea,button { font-family: inherit; font-size: 13.5px; }
   position: absolute;
   left: 11px; top: 24px; bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, rgba(99,102,241,0.5), transparent);
+  background: linear-gradient(to bottom, rgba(16,185,129,0.5), transparent);
 }
 
 /* ── Prototype Badges ── */
@@ -182,9 +182,9 @@ input,select,textarea,button { font-family: inherit; font-size: 13.5px; }
 
 /* ── Prototype Buttons ── */
 .btn-prototype-tab-active {
-  background: #1d293d !important;
-  border: 1px solid rgba(59, 130, 246, 0.4) !important;
-  color: #93c5fd !important;
+  background: rgba(16,185,129,0.15) !important;
+  border: 1px solid rgba(16,185,129,0.4) !important;
+  color: #34d399 !important;
   border-radius: 7px;
   padding: 5px 12px;
   font-size: 12px;
@@ -208,9 +208,9 @@ input,select,textarea,button { font-family: inherit; font-size: 13.5px; }
 }
 
 .btn-prototype-pill-active {
-  background: #172554 !important;
-  border: 1px solid rgba(59, 130, 246, 0.5) !important;
-  color: #60a5fa !important;
+  background: rgba(16,185,129,0.18) !important;
+  border: 1px solid rgba(16,185,129,0.5) !important;
+  color: #34d399 !important;
   border-radius: 9999px;
   padding: 4px 12px;
   font-size: 12px;
@@ -234,7 +234,7 @@ input,select,textarea,button { font-family: inherit; font-size: 13.5px; }
 }
 
 .btn-prototype-primary {
-  background: #2563eb !important;
+  background: linear-gradient(135deg, #059669, #10b981, #14b8a6) !important;
   color: #ffffff !important;
   border-radius: 7px;
   padding: 6px 14px;
@@ -243,12 +243,14 @@ input,select,textarea,button { font-family: inherit; font-size: 13.5px; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: background 0.15s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  border: none !important;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.35);
 }
 .btn-prototype-primary:hover {
-  background: #1d4ed8 !important;
+  opacity: 0.9 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(16,185,129,0.45);
 }
 
 
