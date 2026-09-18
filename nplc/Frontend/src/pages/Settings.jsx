@@ -6,7 +6,7 @@ import {
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
 import {
-  Plug, Plus, Trash2, Loader2, AlertTriangle, CheckCircle, Link2, Unlink, Boxes, Ticket, Mail,
+  Plug, Plus, Trash2, Loader2, AlertTriangle, Link2, Unlink, Boxes, Ticket, Mail,
 } from 'lucide-react'
 
 const BLANK = {
@@ -234,7 +234,7 @@ export default function Settings() {
               }}
               onMouseEnter={e => { if (!saving) { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(16,185,129,0.45)' }}}
               onMouseLeave={e => { e.currentTarget.style.opacity = saving ? '0.5' : '1'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(16,185,129,0.35)' }}>
-              {saving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle size={15} />}
+              {saving && <Loader2 size={15} className="animate-spin" />}
               {saving ? 'Saving…' : 'Add connection'}
             </button>
           </div>
