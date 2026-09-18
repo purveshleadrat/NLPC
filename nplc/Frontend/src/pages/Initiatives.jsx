@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket } from 'lucide-react'
+import { Loader2, Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Trash2, Check, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
 import { getInitiativeConnections, getConnections, getSources, getEvents } from '../api/client'
@@ -18,7 +18,10 @@ const PINNED_KEY = 'nplc_initiative_pinned'
 export default function Initiatives() {
   const { dark } = useTheme()
   const navigate = useNavigate()
-  const { initiatives, loading: initiativesLoading, select } = useInitiative()
+  const { initiatives, loading: initiativesLoading, select, rename, remove } = useInitiative()
+  const [renamingId, setRenamingId] = useState(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [summaries, setSummaries] = useState({}) // { [id]: { scopeLabel, ticketCount, commitCount, openCount, lastUpdated } }
   const [loadingSummaries, setLoadingSummaries] = useState(true)
   const [search, setSearch] = useState('')
@@ -68,6 +71,25 @@ export default function Initiatives() {
   }, [initiatives])
 
   useEffect(() => { loadSummaries() }, [loadSummaries])
+
+  function startRename(init) {
+    setRenamingId(init.id)
+    setRenameValue(init.name)
+    setConfirmDeleteId(null)
+  }
+
+  async function commitRename(id) {
+    const value = renameValue.trim()
+    setRenamingId(null)
+    if (!value) return
+    const current = initiatives.find(i => i.id === id)
+    if (value === current?.name) return
+    try { await rename(id, value) } catch { /* keep old name displayed on failure */ }
+  }
+
+  async function confirmDelete(id) {
+    try { await remove(id) } finally { setConfirmDeleteId(null) }
+  }
 
   function togglePin(id) {
     setPinned(prev => {
@@ -211,22 +233,77 @@ export default function Initiatives() {
               const updated = relativeDate(s.lastUpdated)
               const color = PROJECT_COLORS[i % PROJECT_COLORS.length]
 
+              const isRenaming = renamingId === init.id
+              const isConfirmingDelete = confirmDeleteId === init.id
+
               return (
                 <div
                   key={init.id}
-                  onClick={() => { select(init.id); navigate('/') }}
+                  onClick={() => { if (!isRenaming) { select(init.id); navigate('/') } }}
                   className={`rounded-xl px-[15px] py-[14px] cursor-pointer transition-all group relative ${card}`}
                 >
-                  <button
-                    onClick={e => { e.stopPropagation(); togglePin(init.id) }}
-                    className={`absolute top-3.5 right-3.5 transition-colors ${isPinned ? 'text-yellow-400' : dark ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
-                  >
-                    <Star size={13} fill={isPinned ? 'currentColor' : 'none'} />
-                  </button>
+                  <div className="absolute top-3 right-3 flex items-center gap-1">
+                    {isConfirmingDelete ? (
+                      <>
+                        <button
+                          onClick={e => { e.stopPropagation(); confirmDelete(init.id) }}
+                          title="Confirm delete"
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          <Check size={13} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
+                          title="Cancel"
+                          className={dark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}
+                        >
+                          <X size={13} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={e => { e.stopPropagation(); startRename(init) }}
+                          title="Rename"
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-gray-200' : 'text-gray-400 hover:text-gray-700'}`}
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); setConfirmDeleteId(init.id) }}
+                          title="Delete"
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-gray-500 hover:text-red-400' : 'text-gray-400 hover:text-red-500'}`}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); togglePin(init.id) }}
+                          className={`transition-colors ${isPinned ? 'text-yellow-400' : dark ? 'text-gray-600 hover:text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
+                        >
+                          <Star size={13} fill={isPinned ? 'currentColor' : 'none'} />
+                        </button>
+                      </>
+                    )}
+                  </div>
 
-                  <div className="flex items-center gap-[9px] mb-2 pr-6">
+                  <div className="flex items-center gap-[9px] mb-2 pr-16">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                    <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
+                    {isRenaming ? (
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => setRenameValue(e.target.value)}
+                        onBlur={() => commitRename(init.id)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') commitRename(init.id)
+                          if (e.key === 'Escape') setRenamingId(null)
+                        }}
+                        className={`w-full font-bold text-[14.5px] tracking-[-0.2px] rounded px-1 -mx-1 outline-none ring-1 ring-blue-400 ${dark ? 'bg-white/[0.06] text-gray-100' : 'bg-white text-gray-900'}`}
+                      />
+                    ) : (
+                      <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
+                    )}
                   </div>
 
                   <p className={`text-[11.5px] mb-2.5 ${muted}`}>

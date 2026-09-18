@@ -6,7 +6,7 @@ import {
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
 import {
-  Plug, Plus, Trash2, Loader2, AlertTriangle, CheckCircle, Link2, Unlink, Boxes, Ticket, Edit3,
+  Plug, Plus, Trash2, Loader2, AlertTriangle, CheckCircle, Link2, Unlink, Boxes, Ticket,
 } from 'lucide-react'
 
 const BLANK_JIRA = { provider: 'JIRA', label: '', baseUrl: 'https://your-domain.atlassian.net', accountId: '', repo: '', secret: '' }
@@ -14,7 +14,7 @@ const BLANK_GH   = { provider: 'GITHUB', label: '', baseUrl: 'https://api.github
 
 export default function Settings() {
   const { dark } = useTheme()
-  const { current, currentId, rename, remove } = useInitiative()
+  const { currentId } = useInitiative()
 
   const [connections, setConnections] = useState([])
   const [bindings, setBindings] = useState([])   // [{connectionId, scopeKey}]
@@ -22,7 +22,6 @@ export default function Settings() {
   const [error, setError] = useState(null)
   const [form, setForm] = useState(BLANK_JIRA)
   const [saving, setSaving] = useState(false)
-  const [name, setName] = useState(current?.name || '')
 
   const card  = dark ? 'glass-dark' : 'glass-light shadow-sm'
   const label = dark ? 'text-gray-400' : 'text-gray-500'
@@ -49,7 +48,6 @@ export default function Settings() {
   }, [currentId])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => { setName(current?.name || '') }, [current])
 
   const boundIds = new Set(bindings.map((b) => b.connectionId))
 
@@ -95,23 +93,11 @@ export default function Settings() {
     }
   }
 
-  async function saveRename() {
-    if (!name.trim() || name.trim() === current?.name) return
-    try { await rename(currentId, name.trim()) }
-    catch (err) { setError(err?.response?.data?.message || err.message) }
-  }
-
-  async function deleteInit() {
-    if (!window.confirm(`Delete initiative "${current?.name}" and ALL its sources, events and history? This cannot be undone.`)) return
-    try { await remove(currentId) }
-    catch (err) { setError(err?.response?.data?.message || err.message) }
-  }
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h2 className={`text-[22px] font-bold ${head}`}>Settings</h2>
-        <p className={`text-[14px] ${muted}`}>Manage this initiative and the Jira / GitHub accounts it pulls from.</p>
+        <p className={`text-[14px] ${muted}`}>Manage the Jira / GitHub accounts this initiative pulls from.</p>
       </div>
 
       {error && (
@@ -119,29 +105,6 @@ export default function Settings() {
           <AlertTriangle size={15} /> {error}
         </div>
       )}
-
-      {/* Initiative */}
-      <div className={`rounded-2xl p-5 ${card}`}>
-        <div className="flex items-center gap-2 mb-4">
-          <Edit3 size={15} className="text-indigo-400" />
-          <h3 className={`text-[16px] font-semibold ${head}`}>Initiative</h3>
-        </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex-1 min-w-[200px]">
-            <label className={`block text-[12px] font-medium mb-1 ${label}`}>Name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)}
-              className={`w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-indigo-500/30 ${inp}`} />
-          </div>
-          <button onClick={saveRename} disabled={!name.trim() || name.trim() === current?.name}
-            className="brand-gradient text-white px-4 py-2.5 rounded-xl text-[14px] font-semibold hover:opacity-90 disabled:opacity-40 transition-all">
-            Rename
-          </button>
-          <button onClick={deleteInit}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-[14px] font-semibold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all">
-            <Trash2 size={14} /> Delete
-          </button>
-        </div>
-      </div>
 
       {/* Connections list */}
       <div className={`rounded-2xl p-5 ${card}`}>
