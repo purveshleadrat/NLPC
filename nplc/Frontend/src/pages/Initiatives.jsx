@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { LoadingScreen } from '../App'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Eye, Trash2, Check, X } from 'lucide-react'
+import { Search, Star, ChevronDown, Plus, GitCommitHorizontal, Ticket, Pencil, Eye, Trash2, Check, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useInitiative } from '../context/InitiativeContext'
 import { getInitiativeConnections, getConnections, getSources, getEvents } from '../api/client'
@@ -163,7 +164,7 @@ export default function Initiatives() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name..."
-            className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-400 w-48 ${input}`}
+            className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-emerald-400 w-48 ${input}`}
           />
         </div>
 
@@ -200,12 +201,7 @@ export default function Initiatives() {
         </div>
       </div>
 
-      {loading && (
-        <div className={`flex items-center gap-2 py-20 justify-center ${muted}`}>
-          <Loader2 size={18} className="animate-spin" />
-          <span className="text-[13px]">Loading initiatives…</span>
-        </div>
-      )}
+      {loading && <LoadingScreen dark={dark} />}
 
       {!loading && processed.length === 0 && (
         <div className={`text-center py-20 border-2 border-dashed rounded-xl text-[13px] ${dark ? 'border-white/10 text-gray-500' : 'border-gray-200 text-gray-400'}`}>
@@ -285,7 +281,7 @@ export default function Initiatives() {
 
                   <div className="flex items-center gap-[9px] mb-2 pr-16">
                     <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                    <p title={init.name} className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
+                    <p className={`font-bold text-[14.5px] tracking-[-0.2px] leading-tight truncate ${title}`}>{init.name}</p>
                   </div>
 
                   {init.priority && PRIORITY_META[init.priority] && (

@@ -1,28 +1,24 @@
 package com.hackathon.productmemory.dto;
 
-import java.time.Instant;
 import java.util.List;
 
 public class SearchDtos {
 
     public record SearchResult(
-            String id,
-            String kind,          // "event" | "source"
-            String subtype,       // eventType or source type
-            String title,
-            String snippet,       // short excerpt with match context
-            String initiativeId,
-            String initiativeName,
-            String author,
-            String externalRef,
-            String eventDate,
-            Instant createdAt,
-            List<String> affectedItems
+        String id,
+        String kind,        // "event" | "source"
+        String subType,     // eventType or source type
+        String initiativeId,
+        String initiativeName,
+        String title,
+        String snippet,
+        String date
     ) {}
 
     public record SearchResponse(
-            String query,
-            int total,
-            List<SearchResult> results
+        List<SearchResult> events,
+        List<SearchResult> sources,
+        int totalEvents,
+        int totalSources
     ) {}
 }

@@ -180,7 +180,7 @@ export default function DecisionTimeline({ refreshTick = 0 }) {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search timeline..."
-            className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-400 w-48 ${input}`}
+            className={`pl-8 pr-3 py-1.5 border rounded-full text-[12px] focus:outline-none focus:ring-1 focus:ring-emerald-400 w-48 ${input}`}
           />
         </div>
         {CATEGORIES.map(c => (
