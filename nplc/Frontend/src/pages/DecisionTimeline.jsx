@@ -92,7 +92,7 @@ function TimelineItem({ item, dark }) {
   )
 }
 
-export default function DecisionTimeline() {
+export default function DecisionTimeline({ refreshTick = 0 }) {
   const { dark } = useTheme()
   const [events, setEvents] = useState([])
   const [sources, setSources] = useState([])
@@ -114,7 +114,7 @@ export default function DecisionTimeline() {
       })
       .catch((err) => setError(err?.response?.data?.message || err.message))
       .finally(() => setLoading(false))
-  }, [currentId])
+  }, [currentId, refreshTick])
 
   useEffect(() => { load() }, [load])
 

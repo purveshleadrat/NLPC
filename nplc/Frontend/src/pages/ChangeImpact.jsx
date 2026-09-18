@@ -84,7 +84,7 @@ function ImpactGroup({ item, events, open, onToggle, dark }) {
   )
 }
 
-export default function ChangeImpact() {
+export default function ChangeImpact({ refreshTick = 0 }) {
   const { dark } = useTheme()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -108,7 +108,7 @@ export default function ChangeImpact() {
       })
       .catch((err) => setError(err?.response?.data?.message || err.message))
       .finally(() => setLoading(false))
-  }, [currentId])
+  }, [currentId, refreshTick])
 
   const grouped  = groupByAffected(events)
   const filtered = Object.entries(grouped).filter(([item]) =>
